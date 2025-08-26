@@ -13,6 +13,27 @@ export default async function DashboardPage() {
     redirect('/login')
   }
 
+  // FAILSAFE: Check for and complete any pending referrals when dashboard loads
+  try {
+    const { data: referralResult, error: referralError } = await supabase.rpc(
+      'complete_pending_referral_for_user',
+      { p_user_id: user.id }
+    )
+    
+    if (referralResult?.success) {
+      console.log('[DASHBOARD_REFERRAL_CHECK] Completed pending referral:', referralResult)
+    } else if (referralResult?.reason && !referralResult.reason.includes('No pending referral')) {
+      console.log('[DASHBOARD_REFERRAL_CHECK] Referral check result:', referralResult)
+    }
+    
+    if (referralError) {
+      console.warn('[DASHBOARD_REFERRAL_CHECK] RPC error:', referralError?.message || referralError)
+    }
+  } catch (err) {
+    // Don't fail dashboard load if referral check fails
+    console.error('[DASHBOARD_REFERRAL_CHECK] Exception during referral check:', err)
+  }
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')

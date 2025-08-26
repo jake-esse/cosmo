@@ -2,19 +2,33 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, MessageSquare, Store, Wallet, Settings } from 'lucide-react'
+import { Home, MessageSquare, Store, Wallet, Settings, Users, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Chat', href: '/dashboard/chat', icon: MessageSquare },
-  { name: 'Apps', href: '/dashboard/apps', icon: Store },
-  { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
-  { name: 'Settings', href: '/dashboard/settings', icon: Settings },
-]
+interface DashboardSidebarProps {
+  isAdmin?: boolean
+}
 
-export default function DashboardSidebar() {
+export default function DashboardSidebar({ isAdmin = false }: DashboardSidebarProps) {
   const pathname = usePathname()
+  
+  const navigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: Home },
+    { name: 'Chat', href: '/dashboard/chat', icon: MessageSquare },
+    { name: 'Apps', href: '/dashboard/apps', icon: Store },
+    { name: 'Referrals', href: '/referrals', icon: Users },
+    { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+  ]
+  
+  // Add admin link if user is admin
+  if (isAdmin) {
+    navigation.push({ 
+      name: 'Admin', 
+      href: '/admin/referrals', 
+      icon: Shield 
+    })
+  }
 
   return (
     <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">

@@ -5,12 +5,35 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   
-  // Only handle OAuth callbacks (not email verification)
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     
-    if (!error) {
+    if (!error && data.user) {
+      // Check if this is an email verification (user just confirmed their email)
+      if (data.user.email_confirmed_at && data.user.id) {
+        try {
+          // Use the fixed referral completion function
+          const { data: result, error } = await supabase.rpc(
+            'complete_pending_referral_for_user',
+            { p_user_id: data.user.id }
+          )
+          
+          if (result?.success) {
+            console.log('[AUTH_CALLBACK] Successfully completed referral:', result)
+          } else if (result?.reason) {
+            console.log('[AUTH_CALLBACK] Referral completion result:', result.reason)
+          }
+          
+          if (error) {
+            console.warn('[AUTH_CALLBACK] Error completing referral:', error.message)
+          }
+        } catch (err) {
+          console.error('[AUTH_CALLBACK] Exception during referral completion:', err)
+          // Don't fail auth flow
+        }
+      }
+      
       return NextResponse.redirect(new URL('/dashboard', requestUrl.origin))
     }
   }

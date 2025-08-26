@@ -38,6 +38,16 @@ Extends Supabase auth.users with additional user information.
 - `avatar_url` (TEXT): Profile picture URL
 - `referral_code` (TEXT): Unique 8-character code
 - `referred_by` (UUID): Reference to referrer
+- **Security fields:**
+  - `signup_ip` (INET): IP address at registration
+  - `signup_user_agent` (TEXT): Browser/client at signup
+  - `email_verified_at` (TIMESTAMPTZ): Email verification timestamp
+  - `last_referral_at` (TIMESTAMPTZ): Last referral sent
+  - `referrals_sent_count` (INTEGER): Total referrals sent
+  - `referrals_completed_count` (INTEGER): Successful referrals
+  - `is_suspicious` (BOOLEAN): Account flagged for review
+  - `suspension_reason` (TEXT): Why account was suspended
+  - `suspended_at` (TIMESTAMPTZ): When account was suspended
 
 #### user_interactions
 Append-only event log of all user actions.
@@ -86,13 +96,54 @@ Individual messages within conversations.
 ### Referral System
 
 #### referrals
-Tracks referral relationships and rewards.
+Tracks referral relationships and rewards with security measures.
 - `id` (UUID): Primary key
 - `referrer_id` (UUID): User who made referral
 - `referred_id` (UUID): User who was referred
-- `status` (ENUM): pending/completed/expired
+- `status` (ENUM): pending/completed/expired/cancelled
 - `referrer_reward_transaction_id` (UUID): Reward transaction
 - `referred_reward_transaction_id` (UUID): Bonus transaction
+- **Security fields:**
+  - `signup_ip` (INET): IP address at signup
+  - `signup_user_agent` (TEXT): Browser/client info
+  - `fraud_score` (DECIMAL): 0-1 fraud probability
+  - `is_suspicious` (BOOLEAN): Flagged for review
+  - `blocked_reason` (TEXT): Why referral was blocked
+  - `email_verified_at` (TIMESTAMPTZ): When email was verified
+  - `validation_checks` (JSONB): Security validation results
+
+#### referral_attempts
+Tracks all referral code attempts for rate limiting.
+- `id` (UUID): Primary key
+- `referrer_id` (UUID): Potential referrer
+- `attempted_code` (TEXT): Code that was tried
+- `attempt_ip` (INET): IP of attempt
+- `success` (BOOLEAN): Whether attempt succeeded
+- `failure_reason` (TEXT): Why attempt failed
+
+#### ip_security_tracking
+Monitors IP addresses for suspicious patterns.
+- `id` (UUID): Primary key
+- `ip_address` (INET): Tracked IP address
+- `signup_count` (INTEGER): Signups from this IP
+- `referral_count` (INTEGER): Referrals from this IP
+- `suspicious_activity_count` (INTEGER): Suspicious events
+- `is_blocked` (BOOLEAN): IP is blocked
+- `blocked_reason` (TEXT): Why IP was blocked
+
+#### referral_security_config
+Configurable security rules and limits.
+- `id` (UUID): Primary key
+- `config_key` (TEXT): Setting name
+- `config_value` (JSONB): Setting value
+- `description` (TEXT): What this setting controls
+- Default limits:
+  - Max 5 referrals per day
+  - Max 20 referrals per week
+  - Max 50 referrals per month
+  - Max 3 signups per IP per day
+  - 60 minute cooldown between referrals
+  - 24 hour minimum account age to refer
 
 ### Subscription System
 
@@ -179,10 +230,65 @@ Validates the transaction chain for a user.
 SELECT verify_transaction_integrity('user-uuid');
 ```
 
-### complete_referral()
-Completes a referral and awards points to both parties.
+### complete_referral_secure()
+Completes a referral with security checks and awards points.
 ```sql
-SELECT complete_referral('referred-user-uuid');
+SELECT complete_referral_secure('referred-user-uuid');
+-- Returns: {success: boolean, reason: text, ...}
+```
+
+### validate_referral_code()
+Validates referral code format (8 uppercase alphanumeric).
+```sql
+SELECT validate_referral_code('ABCD1234');
+-- Returns: boolean
+```
+
+### can_send_referral()
+Checks if user can send referrals based on limits and status.
+```sql
+SELECT can_send_referral('user-uuid');
+-- Returns: {can_refer: boolean, reason: text, daily_remaining: integer, ...}
+```
+
+### check_ip_security()
+Validates IP address for signup or referral actions.
+```sql
+SELECT check_ip_security('192.168.1.1'::inet, 'signup');
+-- Returns: {allowed: boolean, reason: text, ip_info: jsonb}
+```
+
+### calculate_referral_fraud_score()
+Calculates fraud probability score (0-1) for a referral.
+```sql
+SELECT calculate_referral_fraud_score('referrer-uuid', 'referred-uuid', '192.168.1.1'::inet);
+-- Returns: numeric (0.0 to 1.0)
+```
+
+### validate_and_apply_referral_code()
+Applies a referral code after signup with full validation.
+```sql
+SELECT validate_and_apply_referral_code(
+  'user-uuid', 
+  'REFCODE1',
+  '192.168.1.1'::inet,
+  'Mozilla/5.0...'
+);
+-- Returns: {success: boolean, reason: text, referrer_id: uuid}
+```
+
+### detect_referral_fraud()
+Scans for suspicious referral patterns (admin function).
+```sql
+SELECT * FROM detect_referral_fraud();
+-- Returns: table(user_id, suspicious_pattern, details)
+```
+
+### block_suspicious_user()
+Blocks a user account and cancels pending referrals.
+```sql
+SELECT block_suspicious_user('user-uuid', 'Reason for blocking', 'admin-uuid');
+-- Returns: boolean
 ```
 
 ## Enums
@@ -263,6 +369,17 @@ Performance-optimized indexes on:
 3. **Service Role**: Admin operations require service role key
 4. **Idempotency**: Request IDs prevent duplicate transactions
 5. **Audit Trail**: Complete logging of all operations
+6. **Referral Security**:
+   - Self-referral prevention (users cannot use own code)
+   - IP-based fraud detection and tracking
+   - Email verification required for point awards
+   - Rate limiting (5/day, 20/week, 50/month)
+   - Cooldown periods between referrals (60 minutes)
+   - Minimum account age requirements (24 hours)
+   - Fraud scoring algorithm (0-1 scale)
+   - Automatic suspicious activity detection
+   - IP blocking for repeated violations
+   - Comprehensive audit logging of all attempts
 
 ## Migration to Blockchain
 

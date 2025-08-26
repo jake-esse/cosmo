@@ -26,10 +26,13 @@ export default async function DashboardLayout({
     .select('*')
     .eq('id', user.id)
     .single()
+  
+  // Check if user is admin using explicit database flag
+  const isAdmin = profile?.is_admin === true
 
   return (
     <div className="min-h-screen bg-white">
-      <DashboardSidebar />
+      <DashboardSidebar isAdmin={isAdmin} />
       <div className="lg:pl-64">
         <DashboardHeader user={user} profile={profile} />
         <main className="px-4 sm:px-6 lg:px-8 py-8">

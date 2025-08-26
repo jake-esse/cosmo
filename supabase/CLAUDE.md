@@ -85,10 +85,37 @@ SELECT * FROM equity_balances WHERE user_id = 'user-uuid';
 SELECT * FROM get_user_balance('user-uuid');
 ```
 
-### Complete a Referral
+### Complete a Referral (Secure)
 ```sql
--- Awards points to both referrer and referred
-SELECT complete_referral('referred-user-uuid');
+-- Awards points to both referrer and referred with security checks
+SELECT complete_referral_secure('referred-user-uuid');
+-- Returns: {success: boolean, reason: text, referrer_transaction_id: uuid, ...}
+```
+
+### Validate Referral Code
+```sql
+-- Check if referral code is valid format
+SELECT validate_referral_code('ABCD1234');
+-- Returns: true/false
+```
+
+### Check User Referral Eligibility
+```sql
+-- Check if user can send referrals (rate limits, verification, etc)
+SELECT can_send_referral('user-uuid');
+-- Returns: {can_refer: boolean, reason: text, daily_remaining: integer}
+```
+
+### Apply Referral Code After Signup
+```sql
+-- User enters referral code after account creation
+SELECT validate_and_apply_referral_code(
+  'user-uuid',
+  'REFCODE1',
+  '192.168.1.1'::inet,
+  'Mozilla/5.0...'
+);
+-- Returns: {success: boolean, reason: text}
 ```
 
 ### Verify Transaction Integrity
@@ -124,10 +151,48 @@ When ready to migrate:
 ### Service Role Operations
 Functions marked `SECURITY DEFINER` run with elevated privileges:
 - `award_equity_points`
-- `complete_referral`
+- `complete_referral_secure`
 - `get_user_balance`
+- `validate_and_apply_referral_code`
+- `check_ip_security`
+- `block_suspicious_user`
 
 These bypass RLS but include business logic validation.
+
+### Referral Security
+The referral system includes multiple security layers:
+
+#### Rate Limiting
+- 5 referrals per day per user
+- 20 referrals per week per user  
+- 50 referrals per month per user
+- 3 signups per IP per day
+- 60 minute cooldown between referrals from same IP
+
+#### Fraud Detection
+- Self-referral prevention (automatic)
+- IP matching detection
+- Fraud scoring (0-1 scale)
+- Account age requirements (24 hours)
+- Email verification requirement
+- Suspicious pattern detection
+
+#### Security Monitoring
+```sql
+-- Find suspicious referral patterns
+SELECT * FROM detect_referral_fraud();
+
+-- Check IP security status
+SELECT * FROM ip_security_tracking 
+WHERE is_blocked = true OR suspicious_activity_count > 5;
+
+-- Review high fraud scores
+SELECT * FROM referrals 
+WHERE fraud_score > 0.7 AND status = 'pending';
+
+-- Block suspicious user
+SELECT block_suspicious_user('user-uuid', 'Fraud detected', 'admin-uuid');
+```
 
 ### User Operations
 Direct table access is restricted by RLS:
@@ -266,4 +331,67 @@ FROM equity_transactions et
 LEFT JOIN user_interactions ui ON et.interaction_id = ui.id
 WHERE et.user_id = 'user-uuid'
 ORDER BY et.created_at DESC;
+```
+
+### Referral Troubleshooting
+
+#### Check Why Referral Failed
+```sql
+-- Check user's referral attempts
+SELECT * FROM referral_attempts 
+WHERE referrer_id = 'user-uuid' 
+ORDER BY created_at DESC LIMIT 10;
+
+-- Check user's referral eligibility
+SELECT can_send_referral('user-uuid');
+
+-- Check IP security status
+SELECT check_ip_security('192.168.1.1'::inet, 'referral');
+```
+
+#### Review User's Referral Status
+```sql
+-- Get complete referral info for a user
+SELECT 
+  p.id,
+  p.referral_code,
+  p.referred_by,
+  p.referrals_sent_count,
+  p.referrals_completed_count,
+  p.is_suspicious,
+  p.email_verified_at,
+  r.status as referral_status,
+  r.fraud_score
+FROM profiles p
+LEFT JOIN referrals r ON r.referred_id = p.id
+WHERE p.id = 'user-uuid';
+```
+
+#### Find Referral Chains
+```sql
+-- Trace referral relationships
+WITH RECURSIVE referral_tree AS (
+  SELECT id, username, referred_by, 1 as level
+  FROM profiles
+  WHERE id = 'root-user-uuid'
+  
+  UNION ALL
+  
+  SELECT p.id, p.username, p.referred_by, rt.level + 1
+  FROM profiles p
+  JOIN referral_tree rt ON p.referred_by = rt.id
+  WHERE rt.level < 5
+)
+SELECT * FROM referral_tree ORDER BY level;
+```
+
+#### Security Configuration Check
+```sql
+-- View current security limits
+SELECT * FROM referral_security_config WHERE active = true;
+
+-- Update security setting (admin only)
+UPDATE referral_security_config 
+SET config_value = '10' 
+WHERE config_key = 'max_referrals_per_day';
 ```
