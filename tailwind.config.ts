@@ -16,7 +16,23 @@ const config: Config = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['var(--font-dm-sans)', 'DM Sans', 'system-ui', 'sans-serif'],
+        brand: ['var(--font-crimson-text)', 'Crimson Text', 'serif'],
+        crimson: ['Crimson Text', 'var(--font-crimson-text)', 'serif'],
+        dm: ['DM Sans', 'var(--font-dm-sans)', 'sans-serif'],
+        mono: ['Roboto Mono', 'var(--font-roboto-mono)', 'monospace'],
+      },
+      boxShadow: {
+        'sm': 'var(--shadow-sm)',
+        'md': 'var(--shadow-md)',
+        'lg': 'var(--shadow-lg)',
+        'custom-sm': '0px 2px 4px 0px rgba(30, 41, 59, 0.25)',
+        'custom-md': '0px 4px 6px 0px rgba(0, 0, 0, 0.09)',
+        'custom-lg': '0px 0px 10px 0px rgba(0, 0, 0, 0.09)',
+      },
       colors: {
+        // Ampel Brand Colors from Figma - using exact hex values
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -50,6 +66,26 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        chart: {
+          "1": "hsl(var(--chart-1))",
+          "2": "hsl(var(--chart-2))",
+          "3": "hsl(var(--chart-3))",
+          "4": "hsl(var(--chart-4))",
+          "5": "hsl(var(--chart-5))",
+        },
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
+        },
+      },
+      fontSize: {
+        // Custom font sizes from Figma - using exact pixel values
       },
       borderRadius: {
         lg: "var(--radius)",

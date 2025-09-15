@@ -44,7 +44,7 @@ export default function DashboardHeader({ user, profile }: DashboardHeaderProps)
                     <User className="h-5 w-5 text-gray-600" />
                   </div>
                   <span className="hidden lg:flex lg:items-center ml-3">
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-label-lg text-gray-700">
                       {profile?.display_name || profile?.username || user?.email}
                     </span>
                   </span>
@@ -55,7 +55,7 @@ export default function DashboardHeader({ user, profile }: DashboardHeaderProps)
                     <form action={signOut}>
                       <button
                         type="submit"
-                        className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="flex w-full items-center px-4 py-2 text-label-lg text-gray-700 hover:bg-gray-100"
                       >
                         <LogOut className="mr-3 h-4 w-4" />
                         Sign out

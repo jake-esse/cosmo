@@ -1,7 +1,7 @@
 -- Migration: 015_secure_referral_system.sql
 -- Description: Comprehensive security hardening for the referral system
 -- Purpose: Prevent abuse, add IP-based fraud detection, rate limiting, and comprehensive logging
--- Date: 2025-01-25
+-- Date: 2025-08-25
 
 -- ============================================
 -- PART 1: Add Security Columns to Track IPs and Fraud Detection

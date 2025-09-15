@@ -297,7 +297,6 @@ SELECT block_suspicious_user('user-uuid', 'Reason for blocking', 'admin-uuid');
 - signup
 - referral_completed
 - daily_active
-- chat_message
 - subscription_start
 - subscription_renewal
 - subscription_cancel

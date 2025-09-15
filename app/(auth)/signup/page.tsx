@@ -4,10 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { signUp } from '../actions'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Loader2, Sparkles } from 'lucide-react'
 
 export default function SignUpPage() {
@@ -30,8 +26,13 @@ export default function SignUpPage() {
     }
 
     const formData = new FormData(event.currentTarget)
+    const firstName = formData.get('firstName') as string
+    const lastName = formData.get('lastName') as string
     const password = formData.get('password') as string
     const confirmPassword = formData.get('confirmPassword') as string
+    
+    // Combine first and last name for the fullName field
+    formData.set('fullName', `${firstName} ${lastName}`)
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
@@ -58,137 +59,178 @@ export default function SignUpPage() {
 
   return (
     <div className="w-full">
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-gray-900">Create an account</h2>
-        <p className="mt-2 text-sm text-gray-600">
-          Get started with your free account
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="font-brand text-[36px] leading-[1.1] tracking-[-1.8px] text-black">
+          Create your account
+        </h1>
+        <p className="mt-3 font-sans text-[16px] leading-[1.4] text-[#6F6F6F]">
+          Join thousands earning equity in AI applications
         </p>
       </div>
       
-      <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 mb-6">
+      {/* Equity Bonus Banner */}
+      <div className="rounded-[12px] bg-[#DFECC6] border border-[#485C11]/20 p-4 mb-6">
         <div className="flex items-center">
-          <Sparkles className="h-5 w-5 text-blue-600 mr-2" />
-          <p className="text-sm font-medium text-blue-900">
-            Earn 100 equity points instantly upon signup!
+          <Sparkles className="h-5 w-5 text-[#485C11] mr-2" />
+          <p className="font-sans font-bold text-[14px] text-[#485C11]">
+            Earn 100 shares instantly upon signup!
           </p>
         </div>
-        <p className="text-xs text-blue-700 mt-1">
-          Start earning equity in the apps you use from day one
+        <p className="font-sans text-[12px] text-[#485C11]/80 mt-1 ml-7">
+          Plus 25 bonus shares if you were referred by a friend
         </p>
       </div>
       
+      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-5">
-        <div>
-          <Label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">Full Name</Label>
-          <Input
-            id="fullName"
-            name="fullName"
-            type="text"
-            placeholder="John Doe"
-            required
-            disabled={isLoading}
-            className="w-full"
-          />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="firstName" className="block font-sans font-medium text-[14px] text-black mb-2">
+              First name
+            </label>
+            <input
+              id="firstName"
+              name="firstName"
+              type="text"
+              placeholder="John"
+              required
+              disabled={isLoading}
+              className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="lastName" className="block font-sans font-medium text-[14px] text-black mb-2">
+              Last name
+            </label>
+            <input
+              id="lastName"
+              name="lastName"
+              type="text"
+              placeholder="Doe"
+              required
+              disabled={isLoading}
+              className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
+            />
+          </div>
         </div>
         
         <div>
-          <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</Label>
-          <Input
+          <label htmlFor="email" className="block font-sans font-medium text-[14px] text-black mb-2">
+            Email
+          </label>
+          <input
             id="email"
             name="email"
             type="email"
             placeholder="you@example.com"
             required
             disabled={isLoading}
-            className="w-full"
+            className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
         </div>
 
         <div>
-          <Label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</Label>
-          <Input
+          <label htmlFor="password" className="block font-sans font-medium text-[14px] text-black mb-2">
+            Password
+          </label>
+          <input
             id="password"
             name="password"
             type="password"
-            placeholder="••••••••"
+            placeholder="Create a secure password"
             required
             disabled={isLoading}
-            minLength={6}
-            className="w-full"
+            minLength={8}
+            className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
-          <p className="mt-1 text-xs text-gray-500">Minimum 6 characters</p>
+          <p className="mt-1 font-sans text-[12px] text-[#6F6F6F]">
+            Must be at least 8 characters
+          </p>
         </div>
 
         <div>
-          <Label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</Label>
-          <Input
+          <label htmlFor="confirmPassword" className="block font-sans font-medium text-[14px] text-black mb-2">
+            Confirm password
+          </label>
+          <input
             id="confirmPassword"
             name="confirmPassword"
             type="password"
-            placeholder="••••••••"
+            placeholder="Re-enter your password"
             required
             disabled={isLoading}
-            minLength={6}
-            className="w-full"
+            minLength={8}
+            className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
         </div>
 
         <div>
-          <Label htmlFor="referralCode" className="block text-sm font-medium text-gray-700 mb-1">
-            Referral Code
-            <span className="text-gray-500 font-normal"> (Optional)</span>
-          </Label>
-          <Input
+          <label htmlFor="referralCode" className="block font-sans font-medium text-[14px] text-black mb-2">
+            Referral code
+            <span className="font-normal text-[#6F6F6F]"> (optional)</span>
+          </label>
+          <input
             id="referralCode"
             name="referralCode"
             type="text"
-            placeholder="Enter code"
+            placeholder="Enter referral code"
             disabled={isLoading}
-            className="w-full"
+            className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
-          <p className="mt-1 text-xs text-gray-500">Both you and your referrer earn bonus points!</p>
+          <p className="mt-1 font-sans text-[12px] text-[#6F6F6F]">
+            Both you and your referrer earn bonus shares!
+          </p>
         </div>
 
         <div className="flex items-start">
-          <Checkbox
+          <input
             id="terms"
+            type="checkbox"
             checked={termsAccepted}
-            onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
             disabled={isLoading}
-            className="mt-0.5"
+            className="w-4 h-4 mt-0.5 text-[#485C11] border-[#E9E9E9] rounded focus:ring-[#485C11] focus:ring-2"
           />
-          <Label
+          <label
             htmlFor="terms"
-            className="ml-2 text-sm text-gray-600 cursor-pointer"
+            className="ml-2 font-sans text-[14px] text-[#6F6F6F] cursor-pointer select-none"
           >
-            I agree to the{' '}
-            <Link href="/terms" className="text-blue-600 hover:text-blue-700 underline">
+            I agree to Ampel&apos;s{' '}
+            <Link href="/terms" className="text-[#485C11] hover:underline">
               Terms of Service
             </Link>
             {' '}and{' '}
-            <Link href="/privacy" className="text-blue-600 hover:text-blue-700 underline">
+            <Link href="/privacy" className="text-[#485C11] hover:underline">
               Privacy Policy
             </Link>
-          </Label>
+          </label>
         </div>
 
+        {/* Error Message */}
         {error && (
-          <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-600">
-            {error}
+          <div className="rounded-[12px] bg-red-50 border border-red-200 p-4">
+            <p className="font-sans text-[14px] text-red-600">
+              {error}
+            </p>
           </div>
         )}
 
+        {/* Success Message */}
         {success && (
-          <div className="rounded-md bg-green-50 border border-green-200 p-3 text-sm text-green-600">
-            {success}
+          <div className="rounded-[12px] bg-[#DFECC6] border border-[#485C11]/20 p-4">
+            <p className="font-sans text-[14px] text-[#485C11]">
+              {success}
+            </p>
           </div>
         )}
 
-
-        <Button
+        {/* Submit Button */}
+        <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           disabled={isLoading || !termsAccepted}
+          className="w-full flex items-center justify-center px-6 py-3.5 bg-[#485C11] text-white font-sans font-bold text-[14px] tracking-[-0.35px] rounded-[1000px] hover:bg-[#485C11]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <>
@@ -198,17 +240,27 @@ export default function SignUpPage() {
           ) : (
             'Create account'
           )}
-        </Button>
+        </button>
 
-        <p className="text-center text-sm text-gray-600">
-          Already have an account?{' '}
-          <Link
-            href="/login"
-            className="text-blue-600 hover:text-blue-700"
-          >
-            Sign in
-          </Link>
-        </p>
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[#E9E9E9]"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-white px-4 font-sans text-[14px] text-[#6F6F6F]">
+              Already have an account?
+            </span>
+          </div>
+        </div>
+
+        {/* Sign In Link */}
+        <Link
+          href="/login"
+          className="w-full flex items-center justify-center px-6 py-3.5 bg-[#DFECC6] text-black font-sans font-bold text-[14px] tracking-[-0.35px] rounded-[1000px] hover:bg-[#DFECC6]/80 transition-colors"
+        >
+          Sign in instead
+        </Link>
       </form>
     </div>
   )

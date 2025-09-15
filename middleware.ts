@@ -33,6 +33,7 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/(auth)')
   const isDashboard = request.nextUrl.pathname.startsWith('/dashboard')
+  const isOnboarding = request.nextUrl.pathname.startsWith('/onboarding')
   const isApiRoute = request.nextUrl.pathname.startsWith('/api')
   const isPublicRoute = request.nextUrl.pathname === '/' || 
                         request.nextUrl.pathname === '/about' || 
@@ -44,11 +45,30 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  if (user && isAuthPage) {
+  if (!user && isOnboarding) {
     const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
+    url.pathname = '/login'
     return NextResponse.redirect(url)
   }
+
+  if (user && isAuthPage) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/chat'
+    return NextResponse.redirect(url)
+  }
+
+  // Check onboarding status for authenticated users
+  // TEMPORARILY DISABLED FOR TESTING - uncomment when ready to enforce onboarding
+  // if (user && !isOnboarding && !isApiRoute && !isAuthPage && !isPublicRoute) {
+  //   const { data: status } = await supabase
+  //     .rpc('get_onboarding_status', { p_user_id: user.id })
+    
+  //   if (status?.next_action === 'complete_education') {
+  //     const url = request.nextUrl.clone()
+  //     url.pathname = '/onboarding/education'
+  //     return NextResponse.redirect(url)
+  //   }
+  // }
 
   return supabaseResponse
 }

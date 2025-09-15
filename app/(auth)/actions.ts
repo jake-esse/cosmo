@@ -134,7 +134,7 @@ export async function signUp(formData: FormData) {
     }
   }
 
-  redirect('/dashboard')
+  redirect('/chat')
 }
 
 export async function signIn(formData: FormData) {
@@ -152,7 +152,7 @@ export async function signIn(formData: FormData) {
     return { error: error.message }
   }
 
-  redirect('/dashboard')
+  redirect('/chat')
 }
 
 export async function signOut() {
@@ -201,7 +201,7 @@ export async function updatePassword(formData: FormData) {
     return { error: error.message }
   }
 
-  redirect('/dashboard')
+  redirect('/chat')
 }
 
 export async function completeUserReferral(userId: string) {
@@ -213,7 +213,7 @@ export async function completeUserReferral(userId: string) {
     // Use the secure version of complete_referral
     const { data, error } = await adminClient.rpc('complete_referral_secure', {
       p_referred_id: userId
-    })
+    } as never)
     
     if (error) {
       console.error('Error completing referral:', error)

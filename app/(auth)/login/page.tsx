@@ -4,10 +4,6 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { signIn } from '../actions'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
@@ -54,16 +50,32 @@ export default function LoginPage() {
 
   return (
     <div className="w-full">
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-gray-900">Sign in to Cosmo</h2>
-        <p className="mt-2 text-sm text-gray-600">
-          Welcome back! Please enter your details
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="font-brand text-[36px] leading-[1.1] tracking-[-1.8px] text-black">
+          Welcome back
+        </h1>
+        <p className="mt-3 font-sans text-[16px] leading-[1.4] text-[#6F6F6F]">
+          Sign in to continue earning equity rewards
         </p>
       </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-6 rounded-[12px] bg-[#DFECC6] border border-[#485C11]/20 p-4">
+          <p className="font-sans text-[14px] text-[#485C11]">
+            {successMessage}
+          </p>
+        </div>
+      )}
+
+      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <Label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</Label>
-          <Input
+          <label htmlFor="email" className="block font-sans font-medium text-[14px] text-black mb-2">
+            Email
+          </label>
+          <input
             id="email"
             name="email"
             type="email"
@@ -71,63 +83,65 @@ export default function LoginPage() {
             required
             disabled={isLoading}
             autoComplete="email"
-            className="w-full"
+            className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <Label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</Label>
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="password" className="block font-sans font-medium text-[14px] text-black">
+              Password
+            </label>
             <Link
               href="/reset-password"
-              className="text-sm text-blue-600 hover:text-blue-700"
+              className="font-sans text-[14px] text-[#485C11] hover:text-[#485C11]/80 transition-colors"
             >
-              Forgot?
+              Forgot password?
             </Link>
           </div>
-          <Input
+          <input
             id="password"
             name="password"
             type="password"
-            placeholder="••••••••"
+            placeholder="Enter your password"
             required
             disabled={isLoading}
             autoComplete="current-password"
-            className="w-full"
+            className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
         </div>
 
         <div className="flex items-center">
-          <Checkbox
+          <input
             id="remember"
+            type="checkbox"
             checked={rememberMe}
-            onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+            onChange={(e) => setRememberMe(e.target.checked)}
             disabled={isLoading}
+            className="w-4 h-4 text-[#485C11] border-[#E9E9E9] rounded focus:ring-[#485C11] focus:ring-2"
           />
-          <Label
+          <label
             htmlFor="remember"
-            className="ml-2 text-sm text-gray-600 cursor-pointer"
+            className="ml-2 font-sans text-[14px] text-[#6F6F6F] cursor-pointer select-none"
           >
-            Remember me
-          </Label>
+            Remember me for 30 days
+          </label>
         </div>
 
-        {successMessage && (
-          <div className="rounded-md bg-green-50 border border-green-200 p-3 text-sm text-green-600">
-            {successMessage}
-          </div>
-        )}
-
+        {/* Error Message */}
         {error && (
-          <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-600">
-            {error}
+          <div className="rounded-[12px] bg-red-50 border border-red-200 p-4">
+            <p className="font-sans text-[14px] text-red-600">
+              {error}
+            </p>
           </div>
         )}
 
-        <Button
+        {/* Submit Button */}
+        <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           disabled={isLoading}
+          className="w-full flex items-center justify-center px-6 py-3.5 bg-[#485C11] text-white font-sans font-bold text-[14px] tracking-[-0.35px] rounded-[1000px] hover:bg-[#485C11]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? (
             <>
@@ -137,18 +151,42 @@ export default function LoginPage() {
           ) : (
             'Sign in'
           )}
-        </Button>
+        </button>
 
-        <p className="text-center text-sm text-gray-600">
-          Don't have an account?{' '}
-          <Link
-            href="/signup"
-            className="text-blue-600 hover:text-blue-700"
-          >
-            Sign up
+        {/* Divider */}
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-[#E9E9E9]"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-white px-4 font-sans text-[14px] text-[#6F6F6F]">
+              New to Ampel?
+            </span>
+          </div>
+        </div>
+
+        {/* Sign Up Link */}
+        <Link
+          href="/signup"
+          className="w-full flex items-center justify-center px-6 py-3.5 bg-[#DFECC6] text-black font-sans font-bold text-[14px] tracking-[-0.35px] rounded-[1000px] hover:bg-[#DFECC6]/80 transition-colors"
+        >
+          Create an account
+        </Link>
+      </form>
+
+      {/* Footer Links */}
+      <div className="mt-8 pt-8 border-t border-[#E9E9E9]">
+        <p className="font-sans text-[12px] text-[#6F6F6F] text-center">
+          By signing in, you agree to our{' '}
+          <Link href="/terms" className="text-[#485C11] hover:underline">
+            Terms of Service
+          </Link>
+          {' '}and{' '}
+          <Link href="/privacy" className="text-[#485C11] hover:underline">
+            Privacy Policy
           </Link>
         </p>
-      </form>
+      </div>
     </div>
   )
 }

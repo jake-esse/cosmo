@@ -1,15 +1,15 @@
-# Cosmo - AI App Store Platform
+# Ampel - AI App Store Platform
 
 ## Project Overview
-Cosmo is building the first app store for consumer AI applications where users earn equity in the apps they use. Think "App Store meets AI meets Web3" - a platform that aligns user, developer, and platform incentives through shared ownership.
+Ampel is building the first app store for consumer AI applications where users earn equity in the apps they use. Think "App Store meets AI meets Web3" - a platform that aligns user, developer, and platform incentives through shared ownership.
 
 ## Core Principles
 
 ### 1. User Ownership
 Users earn equity points for:
 - Signing up (100 points)
-- Referring friends (50 points each)
-- Daily usage (10 points)
+- Referring friends (50 points to referrer)
+- Being referred (25 points bonus on top of signup)
 - Premium subscriptions (200 points/month)
 - Future: Using integrated apps
 
@@ -30,11 +30,13 @@ Building with future SDK in mind:
 ## Directory Structure
 ```
 /app                    # Next.js 14 App Router
+  page.tsx             # Landing page (public)
   /(auth)              # Authentication pages
   /(dashboard)         # Protected app pages
   /api                 # API routes
 /components            # React components
   /ui                  # shadcn/ui components
+  /landing            # Landing page components
   /chat               # Chat-specific components
   /wallet             # Equity wallet components
 /lib                   # Core libraries
@@ -50,6 +52,7 @@ Building with future SDK in mind:
 - **Database**: Supabase (PostgreSQL)
 - **AI**: Anthropic Claude API
 - **UI**: Tailwind CSS + shadcn/ui
+- **Typography**: DM Sans (UI) + Crimson Text (Headlines) + Roboto Mono (Captions)
 - **Deployment**: Vercel
 - **Development**: Claude Code + TypeScript
 
@@ -64,7 +67,7 @@ Building with future SDK in mind:
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/[your-org]/cosmo-platform.git
+git clone https://github.com/ampel-ai/ampel-platform.git
 
 # Install dependencies
 npm install
@@ -138,4 +141,4 @@ For questions or issues:
 [TBD]
 
 ---
-Built with speed and vision by the Cosmo team.
+Built with speed and vision by the Ampel team.
