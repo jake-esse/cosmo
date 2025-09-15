@@ -2,7 +2,6 @@
 
 import React, { useState, memo } from 'react'
 import { Edit2, Check, X } from 'lucide-react'
-import { FileAttachment } from '@/lib/ai/types'
 
 interface MessageUserProps {
   message: string
@@ -10,10 +9,9 @@ interface MessageUserProps {
   userInitials?: string
   onEdit?: (newMessage: string) => void
   canEdit?: boolean
-  attachments?: FileAttachment[]
 }
 
-export const MessageUser = memo(function MessageUser({ message, timestamp, userInitials = 'U', onEdit, canEdit = false, attachments }: MessageUserProps) {
+export const MessageUser = memo(function MessageUser({ message, timestamp, userInitials = 'U', onEdit, canEdit = false }: MessageUserProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedMessage, setEditedMessage] = useState(message)
   const [isHovered, setIsHovered] = useState(false)
@@ -99,22 +97,6 @@ export const MessageUser = memo(function MessageUser({ message, timestamp, userI
             <p className="text-body-md text-white whitespace-pre-wrap break-words">
               {message}
             </p>
-            {/* Display attachments if any */}
-            {attachments && attachments.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {attachments.map((attachment, index) => (
-                  <div 
-                    key={`${attachment.id}-${index}`}
-                    className="inline-flex items-center gap-1 px-2 py-1 bg-slate-800 rounded text-xs text-slate-300"
-                  >
-                    <span className="font-mono">{attachment.fileName}</span>
-                    {attachment.error && (
-                      <span className="text-red-400 ml-1">(Error)</span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
       </div>

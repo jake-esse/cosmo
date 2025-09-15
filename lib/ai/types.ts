@@ -33,31 +33,6 @@ export interface ModelUsage {
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
-  attachments?: FileAttachment[];
-}
-
-export interface FileAttachment {
-  id: string;
-  fileName: string;
-  mimeType: string;
-  fileSize: number;
-  signedUrl?: string;
-  base64?: string;
-  text?: string;
-  processedContent?: string;
-  processingTimeMs?: number;
-  error?: string;
-}
-
-export interface UploadedFile {
-  id: string;
-  fileName: string;
-  mimeType: string;
-  fileSize: number;
-  signedUrl: string;
-  storagePath: string;
-  processedFile?: Partial<FileAttachment>;
-  uploadedAt: string;
 }
 
 export interface StreamingOptions {

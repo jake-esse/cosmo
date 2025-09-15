@@ -2,35 +2,26 @@
 
 import React, { useState, useRef, KeyboardEvent, useEffect, useCallback } from 'react'
 import { SendIcon, ChevronDownIcon } from '@/components/icons'
-import { ModelConfig, UploadedFile } from '@/lib/ai/types'
+import { ModelConfig } from '@/lib/ai/types'
 import { Badge } from '@/components/ui/badge'
 import { Sparkles, Crown, Zap } from 'lucide-react'
-import { FileUploadButton } from './FileUploadButton'
-import { FilePreview } from './FilePreview'
 
 interface ChatInputProps {
-  onSend: (message: string, model: string, attachments?: UploadedFile[]) => void
+  onSend: (message: string, model: string) => void
   isLoading?: boolean
   selectedModelId?: string
   onModelChange?: (model: string) => void
   conversationModel?: string | null
   hasMessages?: boolean
-  conversationId?: string
 }
 
-export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelChange, conversationModel, hasMessages, conversationId }: ChatInputProps) {
+export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelChange, conversationModel, hasMessages }: ChatInputProps) {
   const [message, setMessage] = useState('')
   const [models, setModels] = useState<ModelConfig[]>([])
   const [selectedModel, setSelectedModel] = useState<string>(selectedModelId || 'gemini-2.5-flash-lite')
   const [showModelSelector, setShowModelSelector] = useState(false)
   const [loadingModels, setLoadingModels] = useState(true)
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
-  const [uploading, setUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const dropZoneRef = useRef<HTMLDivElement>(null)
-  const [isDragging, setIsDragging] = useState(false)
 
   // Update selected model when selectedModelId prop changes
   useEffect(() => {
@@ -74,145 +65,17 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
   }
 
   const handleSend = async () => {
-    if ((message.trim() || uploadedFiles.length > 0 || selectedFiles.length > 0) && !isLoading && selectedModel) {
-      // For new conversations without ID, we'll pass files to parent for handling
-      let finalUploadedFiles = [...uploadedFiles]
-      
-      if (selectedFiles.length > 0 && conversationId) {
-        // Only upload if we have a conversation ID
-        const newUploads = await uploadFiles(selectedFiles)
-        finalUploadedFiles = [...finalUploadedFiles, ...newUploads]
-      }
-      
-      // Pass selected files to parent if no conversation ID yet
-      const filesToSend = conversationId ? finalUploadedFiles : selectedFiles
-      
-      onSend(message.trim() || 'Please analyze the attached files.', selectedModel, filesToSend as any)
-      
+    if (message.trim() && !isLoading && selectedModel) {
+      onSend(message.trim(), selectedModel)
+
       // Clear state
       setMessage('')
-      setSelectedFiles([])
-      setUploadedFiles([])
-      setUploadProgress({})
       if (textareaRef.current) {
         textareaRef.current.style.height = '20px'
       }
     }
   }
 
-  const uploadFiles = async (files: File[]): Promise<UploadedFile[]> => {
-    if (!conversationId) {
-      console.error('No conversation ID available for file upload')
-      return []
-    }
-
-    setUploading(true)
-    const formData = new FormData()
-    
-    files.forEach(file => {
-      formData.append('files', file)
-      setUploadProgress(prev => ({ ...prev, [file.name]: 0 }))
-    })
-    
-    formData.append('conversationId', conversationId)
-    formData.append('provider', currentModel?.provider || 'anthropic')
-
-    try {
-      // Simulate progress updates
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          const newProgress = { ...prev }
-          files.forEach(file => {
-            if (newProgress[file.name] < 90) {
-              newProgress[file.name] = Math.min(90, (newProgress[file.name] || 0) + 10)
-            }
-          })
-          return newProgress
-        })
-      }, 200)
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      })
-
-      clearInterval(progressInterval)
-      
-      if (!response.ok) {
-        throw new Error('Upload failed')
-      }
-
-      const result = await response.json()
-      
-      // Set progress to 100% for successful uploads
-      files.forEach(file => {
-        setUploadProgress(prev => ({ ...prev, [file.name]: 100 }))
-      })
-
-      // Show any errors
-      if (result.failed && result.failed.length > 0) {
-        const errors = result.failed.map((f: any) => `${f.fileName}: ${f.error}`).join('\n')
-        alert('Some files failed to upload:\n' + errors)
-      }
-
-      return result.uploaded || []
-    } catch (error) {
-      console.error('Upload error:', error)
-      alert('Failed to upload files. Please try again.')
-      return []
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleFilesSelected = useCallback((files: File[]) => {
-    setSelectedFiles(prev => [...prev, ...files].slice(0, 5)) // Max 5 files
-  }, [])
-
-  const handleRemoveFile = useCallback((index: number) => {
-    const allFiles = [...selectedFiles, ...uploadedFiles]
-    const fileToRemove = allFiles[index]
-    
-    if (index < selectedFiles.length) {
-      // Remove from selected files
-      setSelectedFiles(prev => prev.filter((_, i) => i !== index))
-    } else {
-      // Remove from uploaded files
-      const uploadedIndex = index - selectedFiles.length
-      setUploadedFiles(prev => prev.filter((_, i) => i !== uploadedIndex))
-    }
-  }, [selectedFiles, uploadedFiles])
-
-  // Drag and drop handlers
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(true)
-  }, [])
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (dropZoneRef.current && !dropZoneRef.current.contains(e.relatedTarget as Node)) {
-      setIsDragging(false)
-    }
-  }, [])
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-  }, [])
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragging(false)
-
-    const files = Array.from(e.dataTransfer.files)
-    if (files.length > 0) {
-      handleFilesSelected(files)
-    }
-  }, [handleFilesSelected])
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -259,17 +122,11 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
 
   const currentModel = models.find(m => m.model_id === selectedModel)
 
-  const allFiles = [...selectedFiles, ...uploadedFiles]
-  const hasAttachments = allFiles.length > 0
-
   return (
     <div className="w-full max-w-[803px]">
       {/* Main input container */}
-      <div 
-        ref={dropZoneRef}
-        className={`relative w-full rounded-[30px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)] transition-all ${
-          isDragging ? 'ring-2 ring-blue-500 ring-offset-2' : ''
-        }`}
+      <div
+        className="relative w-full rounded-[30px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)] transition-all"
         style={{
           height: '134px',
           backgroundColor: 'rgba(255, 255, 255, 0.4)',
@@ -277,18 +134,7 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           transform: 'translateZ(0)'
         }}
-        onDragEnter={handleDragEnter}
-        onDragLeave={handleDragLeave}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
       >
-        {/* Drag overlay */}
-        {isDragging && (
-          <div className="absolute inset-0 z-50 rounded-[30px] bg-blue-50/90 flex items-center justify-center">
-            <p className="text-blue-600 font-medium">Drop files here to upload</p>
-          </div>
-        )}
-
         {/* Textarea */}
         <textarea
         ref={textareaRef}
@@ -301,15 +147,8 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
         disabled={isLoading}
       />
       
-      {/* Bottom Row Container - File upload, Model selector and Send button */}
-      <div className="absolute bottom-[18px] left-[18px] right-[18px] flex items-center justify-between">
-        {/* File Upload Button on left */}
-        <FileUploadButton 
-          onFilesSelected={handleFilesSelected}
-          disabled={isLoading || uploading || allFiles.length >= 5}
-          maxFiles={5 - allFiles.length}
-        />
-        
+      {/* Bottom Row Container - Model selector and Send button */}
+      <div className="absolute bottom-[18px] left-[18px] right-[18px] flex items-center justify-end">
         {/* Model selector and Send button on right */}
         <div className="flex items-center gap-3">
         {/* Model Selector */}
@@ -414,7 +253,7 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
           {/* Send Button */}
           <button
             onClick={handleSend}
-            disabled={(!message.trim() && allFiles.length === 0) || isLoading || !selectedModel || uploading}
+            disabled={!message.trim() || isLoading || !selectedModel}
             className="w-[35px] h-[35px] bg-slate-900/90 backdrop-blur-sm rounded-[12px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800 transition-colors"
             aria-label="Send message"
           >
@@ -423,18 +262,6 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
         </div>
       </div>
       </div>
-      
-      {/* File preview - now outside and below the input */}
-      {hasAttachments && (
-        <div className="mt-2">
-          <FilePreview 
-            files={allFiles}
-            onRemove={handleRemoveFile}
-            uploading={uploading}
-            uploadProgress={uploadProgress}
-          />
-        </div>
-      )}
     </div>
   )
 }

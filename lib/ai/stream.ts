@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getModel, Provider } from './providers';
 import { getModelConfig, incrementDailyUsage } from './models';
 import { calculateCosts } from './costs';
-import { StreamingOptions, ChatMessage, ModelUsage, FileAttachment } from './types';
+import { StreamingOptions, ChatMessage, ModelUsage } from './types';
 
 export async function streamChat(options: StreamingOptions) {
   const { userId, modelId, messages } = options;
@@ -27,41 +27,22 @@ export async function streamChat(options: StreamingOptions) {
 
   // Convert messages to AI SDK format and filter out empty messages
   const aiMessages = messages
-    .filter(msg => msg.content && msg.content.trim() !== '') // Filter out empty messages
-    .map(msg => {
-      // Handle attachments based on provider
-      if (msg.attachments && msg.attachments.length > 0) {
-        console.log('[STREAM] Message has attachments:', msg.attachments.length);
-        console.log('[STREAM] Attachment details:', msg.attachments.map(a => ({
-          fileName: a.fileName,
-          mimeType: a.mimeType,
-          hasBase64: !!a.base64,
-          hasText: !!a.text,
-          hasProcessedContent: !!a.processedContent
-        })));
-        return formatMessageWithAttachments(
-          msg,
-          modelConfig.provider as Provider
-        );
-      }
-      
-      return {
-        role: msg.role as 'user' | 'assistant' | 'system',
-        content: msg.content.trim(), // Trim whitespace
-      };
-    });
+    .filter(msg => msg.content && msg.content.trim() !== '')
+    .map(msg => ({
+      role: msg.role as 'user' | 'assistant' | 'system',
+      content: msg.content.trim(),
+    }));
   
   // Ensure we have at least one message
   if (aiMessages.length === 0) {
     throw new Error('No valid messages to process');
   }
   
-  console.log('[STREAM] Filtered messages:', aiMessages.map(m => ({ 
-    role: m.role, 
+  console.log('[STREAM] Filtered messages:', aiMessages.map(m => ({
+    role: m.role,
     contentType: typeof m.content,
-    contentLength: typeof m.content === 'string' ? m.content.length : Array.isArray(m.content) ? m.content.length : 0,
-    hasContent: !!m.content,
-    hasParts: m.parts ? m.parts.length : 0
+    contentLength: typeof m.content === 'string' ? m.content.length : 0,
+    hasContent: !!m.content
   })));
 
   // Add system message to encourage markdown formatting for better readability
@@ -196,172 +177,3 @@ export function isRetryableError(error: any): boolean {
   return true;
 }
 
-function formatMessageWithAttachments(
-  message: ChatMessage,
-  provider: Provider
-): any {
-  const { content, attachments = [], role } = message;
-  
-  // No attachments, return as-is
-  if (attachments.length === 0) {
-    return { role, content };
-  }
-
-  // Format based on provider
-  switch (provider) {
-    case 'anthropic':
-      return formatForAnthropic(content, attachments, role);
-    
-    case 'google':
-      return formatForGemini(content, attachments, role);
-    
-    case 'openai':
-      return formatForOpenAI(content, attachments, role);
-    
-    default:
-      // Fallback: add file info as text
-      const fileInfo = attachments
-        .map(a => `[Attached: ${a.fileName}]`)
-        .join('\n');
-      return {
-        role,
-        content: `${content}\n\n${fileInfo}`
-      };
-  }
-}
-
-function formatForAnthropic(
-  content: string,
-  attachments: FileAttachment[],
-  role: string
-): any {
-  // Anthropic supports multimodal content in message content array
-  const contentParts: any[] = [{ type: 'text', text: content }];
-  
-  for (const attachment of attachments) {
-    if (attachment.base64 && !attachment.error) {
-      // Image or PDF as base64
-      if (attachment.mimeType.startsWith('image/') || attachment.mimeType === 'application/pdf') {
-        contentParts.push({
-          type: 'image',
-          source: {
-            type: 'base64',
-            media_type: attachment.mimeType,
-            data: attachment.base64
-          }
-        });
-      }
-    } else if (attachment.processedContent) {
-      // Text content
-      contentParts.push({
-        type: 'text',
-        text: attachment.processedContent
-      });
-    } else if (attachment.text) {
-      // Raw text
-      contentParts.push({
-        type: 'text',
-        text: `[File: ${attachment.fileName}]\n${attachment.text}`
-      });
-    }
-  }
-  
-  return { role, content: contentParts };
-}
-
-function formatForGemini(
-  content: string,
-  attachments: FileAttachment[],
-  role: string
-): any {
-  // For Vercel AI SDK, Gemini uses the same format as OpenAI for multimodal content
-  const contentParts: any[] = [{ type: 'text', text: content }];
-  
-  console.log('[GEMINI FORMAT] Processing attachments:', attachments.map(a => ({
-    fileName: a.fileName,
-    mimeType: a.mimeType,
-    hasBase64: !!a.base64,
-    hasText: !!a.text,
-    hasProcessedContent: !!a.processedContent,
-    hasError: !!a.error
-  })));
-  
-  for (const attachment of attachments) {
-    if (attachment.mimeType.startsWith('image/') && attachment.base64 && !attachment.error) {
-      // Images as base64 URL
-      console.log('[GEMINI FORMAT] Adding image:', attachment.fileName);
-      contentParts.push({
-        type: 'image',
-        image: `data:${attachment.mimeType};base64,${attachment.base64}`
-      });
-    } else if (attachment.processedContent) {
-      // PDF or text content extracted
-      console.log('[GEMINI FORMAT] Adding processed content for:', attachment.fileName);
-      console.log('[GEMINI FORMAT] Content preview:', attachment.processedContent.substring(0, 200));
-      contentParts.push({
-        type: 'text',
-        text: attachment.processedContent
-      });
-    } else if (attachment.text) {
-      // Raw text
-      console.log('[GEMINI FORMAT] Adding raw text for:', attachment.fileName);
-      contentParts.push({
-        type: 'text',
-        text: `[File: ${attachment.fileName}]\n${attachment.text}`
-      });
-    } else {
-      console.log('[GEMINI FORMAT] Skipping attachment (no content):', attachment.fileName, { error: attachment.error });
-    }
-  }
-  
-  // If only text content, return as string
-  if (contentParts.length === 1 && contentParts[0].type === 'text') {
-    console.log('[GEMINI FORMAT] Returning single text content');
-    return { role, content: contentParts[0].text };
-  }
-  
-  // For multimodal content
-  console.log('[GEMINI FORMAT] Returning multimodal content with', contentParts.length, 'parts');
-  return { role, content: contentParts };
-}
-
-function formatForOpenAI(
-  content: string,
-  attachments: FileAttachment[],
-  role: string
-): any {
-  // OpenAI uses content array for images, text for PDFs
-  const contentParts: any[] = [{ type: 'text', text: content }];
-  
-  for (const attachment of attachments) {
-    if (attachment.mimeType.startsWith('image/') && attachment.base64 && !attachment.error) {
-      // Images as base64
-      contentParts.push({
-        type: 'image_url',
-        image_url: {
-          url: `data:${attachment.mimeType};base64,${attachment.base64}`,
-          detail: 'auto'
-        }
-      });
-    } else if (attachment.processedContent) {
-      // PDF or text content extracted
-      contentParts.push({
-        type: 'text',
-        text: attachment.processedContent
-      });
-    } else if (attachment.text) {
-      // Raw text
-      contentParts.push({
-        type: 'text',
-        text: `[File: ${attachment.fileName}]\n${attachment.text}`
-      });
-    }
-  }
-  
-  // If only text content, return as string
-  if (contentParts.length === 1 && contentParts[0].type === 'text') {
-    return { role, content: contentParts[0].text };
-  }
-  
-  return { role, content: contentParts };
-}

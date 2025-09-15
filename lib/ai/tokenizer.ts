@@ -39,7 +39,8 @@ export async function countTokens(text: string, modelId: string): Promise<number
       const encoding = encodingForModel('gpt-4o');
       const tokens = encoding.encode(text);
       const count = tokens.length;
-      encoding.free();
+      // Note: encoding.free() is not available in browser version of js-tiktoken
+      // The garbage collector will handle cleanup automatically
       return count;
     } catch (error) {
       console.error('Error counting OpenAI tokens:', error);

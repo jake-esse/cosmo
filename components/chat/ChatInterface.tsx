@@ -9,7 +9,6 @@ import { ContextLimitDialog } from './ContextLimitDialog'
 import { VineIcon } from '@/components/icons'
 import { useRouter } from 'next/navigation'
 import { wouldExceedContextLimit } from '@/lib/ai/tokenizer'
-import { UploadedFile, FileAttachment } from '@/lib/ai/types'
 
 export interface Message {
   id: string
@@ -17,7 +16,6 @@ export interface Message {
   content: string
   timestamp?: string
   model?: string
-  attachments?: FileAttachment[]
 }
 
 interface ChatInterfaceProps {
@@ -25,7 +23,7 @@ interface ChatInterfaceProps {
   chatName?: string
   initialMessages?: Message[]
   userInitials?: string
-  onSendMessage?: (message: string, model: string, attachments?: UploadedFile[]) => Promise<string>
+  onSendMessage?: (message: string, model: string) => Promise<string>
   onConversationCreated?: (conversationId: string, title: string) => void
   onConversationUpdated?: () => void
 }
@@ -43,6 +41,7 @@ export function ChatInterface({
   const [conversationId, setConversationId] = useState<string | null>(chatId || null)
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingConversation, setIsLoadingConversation] = useState(!!chatId) // Start loading if we have a chatId
   const [chatError, setChatError] = useState<any>(null)
   const [lastUserMessage, setLastUserMessage] = useState<string>('')
   const [lastSelectedModel, setLastSelectedModel] = useState<string>('gemini-2.5-flash-lite')
@@ -54,25 +53,35 @@ export function ChatInterface({
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
+  // Track if we've loaded this conversation
+  const [loadedConversationId, setLoadedConversationId] = useState<string | null>(null)
+
   // Load conversation if chatId is provided
   useEffect(() => {
+    console.log('[useEffect] chatId:', chatId, 'loadedConversationId:', loadedConversationId, 'messages:', messages.length)
+
     if (chatId) {
-      // Always reset and load when chatId changes
-      setConversationId(chatId)
-      setMessages([]) // Clear messages first
-      loadConversation(chatId)
+      // Load the conversation if we haven't loaded this specific conversation yet
+      if (chatId !== loadedConversationId) {
+        console.log('[useEffect] Loading conversation for chatId:', chatId)
+        setConversationId(chatId)
+        setMessages([]) // Clear messages first
+        loadConversation(chatId)
+        setLoadedConversationId(chatId) // Mark this conversation as loaded
+      }
     } else {
       // No chatId means new conversation
       setConversationId(null)
       setMessages([])
       setConversationModel(null)
       setTotalTokensUsed(0)
+      setLoadedConversationId(null)
     }
-  }, [chatId])
+  }, [chatId, loadedConversationId])
 
   const loadConversation = async (id: string) => {
     try {
-      setIsLoading(true)
+      setIsLoadingConversation(true)
       const response = await fetch(`/api/conversations/${id}`)
       if (!response.ok) {
         console.error('Failed to load conversation')
@@ -80,16 +89,18 @@ export function ChatInterface({
       }
 
       const { conversation, messages: dbMessages } = await response.json()
-      
+
+      console.log('[LoadConversation] Loaded messages:', dbMessages?.length, 'messages')
+
       // Convert database messages to chat interface format
       const formattedMessages: Message[] = dbMessages.map((msg: any) => ({
         id: msg.id,
         role: msg.role,
         content: msg.content,
         model: msg.model,
-        attachments: msg.attachments || [],
       }))
-      
+
+      console.log('[LoadConversation] Setting messages:', formattedMessages.length)
       setMessages(formattedMessages)
       setConversationId(id)
       setConversationModel(conversation.model)
@@ -102,7 +113,7 @@ export function ChatInterface({
     } catch (error) {
       console.error('Error loading conversation:', error)
     } finally {
-      setIsLoading(false)
+      setIsLoadingConversation(false)
     }
   }
 
@@ -126,16 +137,15 @@ export function ChatInterface({
       setConversationId(conversation.id)
       setConversationModel(model)
       setTotalTokensUsed(0)
-      
+      setLoadedConversationId(conversation.id) // Mark as loaded so we don't reload it
+
       // Notify parent component
       if (onConversationCreated) {
         onConversationCreated(conversation.id, conversation.title)
       }
-      
-      // Navigate to the new conversation URL if not already there
-      if (!chatId && conversation.id) {
-        router.push(`/chat/${conversation.id}`)
-      }
+
+      // Don't navigate here - let the parent component handle URL updates
+      // This prevents double navigation and component remounting
       
       return conversation.id
     } catch (error) {
@@ -154,7 +164,6 @@ export function ChatInterface({
           role: message.role,
           content: message.content,
           model: message.model || conversationModel,
-          attachments: message.attachments || [],
         }),
       })
       
@@ -184,41 +193,9 @@ export function ChatInterface({
     scrollToBottom()
   }, [messages])
 
-  const handleSendMessage = async (content: string, model: string, filesOrUploaded?: UploadedFile[] | File[]) => {
-    console.log('Sending message with model:', model, 'Content:', content, 'Files:', filesOrUploaded?.length || 0)
-    
-    let attachments: FileAttachment[] = []
-    
-    // Handle files that need uploading (File objects) vs already uploaded (UploadedFile objects)
-    if (filesOrUploaded && filesOrUploaded.length > 0) {
-      const firstItem = filesOrUploaded[0]
-      
-      if (firstItem instanceof File) {
-        // Files need to be uploaded after conversation creation
-        // We'll handle this after creating the conversation
-      } else {
-        // Already uploaded files
-        attachments = (filesOrUploaded as UploadedFile[]).map(file => {
-          const attachment: any = {
-            id: file.id,
-            fileName: file.fileName,
-            mimeType: file.mimeType,
-            fileSize: file.fileSize,
-            signedUrl: file.signedUrl,
-            base64: file.processedFile?.base64,
-            text: file.processedFile?.text,
-            processedContent: file.processedFile?.processedContent,
-            processingTimeMs: file.processedFile?.processingTimeMs
-          };
-          // Only include error if it exists
-          if (file.processedFile?.error) {
-            attachment.error = file.processedFile.error;
-          }
-          return attachment;
-        })
-      }
-    }
-    
+  const handleSendMessage = async (content: string, model: string) => {
+    console.log('Sending message with model:', model, 'Content:', content)
+
     // Check if model changed from conversation model
     if (conversationModel && model !== conversationModel && messages.length > 0) {
       // Create new conversation with different model
@@ -251,36 +228,12 @@ export function ChatInterface({
         currentConversationId = newConvId
       }
     }
-    
-    // Upload files if they're File objects (for both new and existing conversations)
-    if (filesOrUploaded && filesOrUploaded.length > 0 && filesOrUploaded[0] instanceof File && currentConversationId) {
-      const uploadedFiles = await uploadFilesForConversation(filesOrUploaded as File[], currentConversationId, model)
-      attachments = uploadedFiles.map(file => {
-        const attachment: any = {
-          id: file.id,
-          fileName: file.fileName,
-          mimeType: file.mimeType,
-          fileSize: file.fileSize,
-          signedUrl: file.signedUrl,
-          base64: file.processedFile?.base64,
-          text: file.processedFile?.text,
-          processedContent: file.processedFile?.processedContent,
-          processingTimeMs: file.processedFile?.processingTimeMs
-        };
-        // Only include error if it exists
-        if (file.processedFile?.error) {
-          attachment.error = file.processedFile.error;
-        }
-        return attachment;
-      })
-    }
 
-    // Add user message AFTER attachments are properly uploaded
+    // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
       content,
-      attachments: attachments.length > 0 ? attachments : undefined,
     }
     
     setMessages(prev => [...prev, userMessage])
@@ -295,7 +248,7 @@ export function ChatInterface({
       if (onSendMessage) {
         console.log('Using custom onSendMessage handler')
         // Use custom handler if provided
-        const response = await onSendMessage(content, model, filesOrUploaded as UploadedFile[])
+        const response = await onSendMessage(content, model)
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
@@ -320,8 +273,7 @@ export function ChatInterface({
             modelId: model,
             messages: [...messages, userMessage].map(m => ({
               role: m.role,
-              content: m.content,
-              attachments: m.attachments
+              content: m.content
             }))
           })
         })
@@ -463,6 +415,7 @@ export function ChatInterface({
     setShowContextLimitDialog(false)
     setChatError(null)
     setLastSelectedModel(newModel)
+    setLoadedConversationId(null) // Reset loaded conversation tracker
     
     // If we have a pending message, send it after creating new conversation
     if (lastUserMessage && modelId) {
@@ -488,40 +441,6 @@ export function ChatInterface({
     }
   }
 
-  // Helper function to upload files for a conversation
-  const uploadFilesForConversation = async (files: File[], convId: string, modelId: string): Promise<UploadedFile[]> => {
-    const formData = new FormData()
-    
-    files.forEach(file => {
-      formData.append('files', file)
-    })
-    
-    formData.append('conversationId', convId)
-    
-    // Get provider from model
-    const model = await fetch('/api/chat/models')
-      .then(res => res.json())
-      .then(data => data.models?.find((m: any) => m.model_id === modelId))
-    
-    formData.append('provider', model?.provider || 'anthropic')
-
-    try {
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
-      })
-
-      if (!response.ok) {
-        throw new Error('Upload failed')
-      }
-
-      const result = await response.json()
-      return result.uploaded || []
-    } catch (error) {
-      console.error('Upload error:', error)
-      return []
-    }
-  }
 
   return (
     <div className="flex flex-col h-full">
@@ -554,8 +473,18 @@ export function ChatInterface({
         
         {/* Content layer */}
         <div className="relative z-10 flex-1 flex flex-col">
+        {/* Show loading state when loading a conversation */}
+        {isLoadingConversation && (
+          <div className="flex-1 flex items-center justify-center bg-white">
+            <div className="flex flex-col items-center gap-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-slate-600 border-t-transparent"></div>
+              <p className="text-slate-700 text-body-md">Loading conversation...</p>
+            </div>
+          </div>
+        )}
+
         {/* Empty state with input centered below greeting */}
-        {messages.length === 0 && (
+        {!isLoadingConversation && messages.length === 0 && (
           <div className="flex-1 flex items-center justify-center">
             <div className="flex flex-col items-center w-full max-w-3xl px-6">
               <div className="flex items-end gap-0.5 mb-6">
@@ -573,7 +502,6 @@ export function ChatInterface({
                   onModelChange={handleModelChange}
                   conversationModel={conversationModel}
                   hasMessages={messages.length > 0}
-                  conversationId={conversationId || undefined}
                 />
               </div>
             </div>
@@ -581,7 +509,7 @@ export function ChatInterface({
         )}
 
         {/* Messages */}
-        {messages.length > 0 && (
+        {!isLoadingConversation && messages.length > 0 && (
           <div className="py-6">
             <div className="flex flex-col items-center px-6">
               <div className="w-full max-w-3xl space-y-4">
@@ -606,7 +534,6 @@ export function ChatInterface({
                         userInitials={userInitials}
                         canEdit={true}
                         onEdit={(newContent) => handleEditMessage(index, newContent)}
-                        attachments={message.attachments}
                       />
                     ) : message.role === 'assistant' ? (
                       <MessageAI 
@@ -638,7 +565,7 @@ export function ChatInterface({
       </div>
 
       {/* Chat Input - only at bottom when messages exist */}
-      {messages.length > 0 && (
+      {!isLoadingConversation && messages.length > 0 && (
         <div className="p-6 bg-white">
           <div className="max-w-3xl mx-auto">
             <ChatInput 

@@ -25,20 +25,6 @@ export async function POST(request: NextRequest) {
     const { modelId, messages } = await request.json();
     console.log('[CHAT-STREAM] Model:', modelId, 'Messages count:', messages?.length);
     
-    // Log attachment details for debugging
-    if (messages && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (lastMessage.attachments && lastMessage.attachments.length > 0) {
-        console.log('[CHAT-STREAM] Last message has attachments:', lastMessage.attachments.map((a: any) => ({
-          fileName: a.fileName,
-          mimeType: a.mimeType,
-          hasBase64: !!a.base64,
-          hasText: !!a.text,
-          hasProcessedContent: !!a.processedContent,
-          hasError: !!a.error
-        })));
-      }
-    }
 
     if (!modelId || !messages || !Array.isArray(messages)) {
       return NextResponse.json(
