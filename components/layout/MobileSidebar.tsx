@@ -58,13 +58,13 @@ export function MobileSidebar({ user }: MobileSidebarProps) {
       {/* Hamburger Button - Only visible on mobile */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-md shadow-md"
+        className="md:hidden fixed top-3 left-3 z-50 p-2.5 bg-white rounded-lg shadow-lg border border-slate-200"
         aria-label="Toggle menu"
       >
-        <div className="w-6 h-6 flex flex-col justify-center space-y-1">
-          <span className="block h-0.5 w-6 bg-slate-900"></span>
-          <span className="block h-0.5 w-6 bg-slate-900"></span>
-          <span className="block h-0.5 w-6 bg-slate-900"></span>
+        <div className="w-5 h-5 flex flex-col justify-center space-y-1">
+          <span className="block h-0.5 w-5 bg-slate-700 transition-all"></span>
+          <span className="block h-0.5 w-5 bg-slate-700 transition-all"></span>
+          <span className="block h-0.5 w-5 bg-slate-700 transition-all"></span>
         </div>
       </button>
 

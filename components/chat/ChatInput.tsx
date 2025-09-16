@@ -123,12 +123,11 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
   const currentModel = models.find(m => m.model_id === selectedModel)
 
   return (
-    <div className="w-full max-w-[803px]">
-      {/* Main input container */}
+    <div className="w-full px-2 md:px-0 max-w-[803px]">
+      {/* Main input container - responsive height and border radius */}
       <div
-        className="relative w-full rounded-[30px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)] transition-all"
+        className="relative w-full h-[120px] md:h-[134px] rounded-[25px] md:rounded-[30px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)] transition-all"
         style={{
-          height: '134px',
           backgroundColor: 'rgba(255, 255, 255, 0.4)',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
@@ -142,13 +141,13 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
         onChange={handleTextareaChange}
         onKeyDown={handleKeyDown}
         placeholder="Type your message..."
-        className="absolute left-[18px] top-[18px] right-[18px] text-body-md text-slate-900 placeholder-slate-700 bg-transparent resize-none focus:outline-none"
+        className="absolute left-3 md:left-[18px] top-3 md:top-[18px] right-3 md:right-[18px] text-sm md:text-body-md text-slate-900 placeholder-slate-700 bg-transparent resize-none focus:outline-none"
         style={{ minHeight: '20px', maxHeight: '90px', height: message ? 'auto' : '20px' }}
         disabled={isLoading}
       />
       
       {/* Bottom Row Container - Model selector and Send button */}
-      <div className="absolute bottom-[18px] left-[18px] right-[18px] flex items-center justify-end">
+      <div className="absolute bottom-3 md:bottom-[18px] left-3 md:left-[18px] right-3 md:right-[18px] flex items-center justify-end">
         {/* Model selector and Send button on right */}
         <div className="flex items-center gap-3">
         {/* Model Selector */}
@@ -160,22 +159,25 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
           >
             {currentModel ? (
               <>
-                <span className="text-label-lg text-slate-700">
+                <span className="text-xs md:text-label-lg text-slate-700 hidden sm:inline">
                   {currentModel.display_name}
                 </span>
-                {getTierBadge(currentModel.tier_required)}
+                <span className="text-xs md:text-label-lg text-slate-700 sm:hidden">
+                  {currentModel.display_name.split(' ')[0]}
+                </span>
+                <span className="hidden sm:inline">{getTierBadge(currentModel.tier_required)}</span>
               </>
             ) : (
-              <span className="text-label-lg text-slate-500">
-                {loadingModels ? 'Loading...' : 'Select Model'}
+              <span className="text-xs md:text-label-lg text-slate-500">
+                {loadingModels ? '...' : 'Model'}
               </span>
             )}
-            <ChevronDownIcon className="w-4 h-4 text-slate-600 ml-1" strokeWidth={1} />
+            <ChevronDownIcon className="w-3 md:w-4 h-3 md:h-4 text-slate-600 ml-0.5 md:ml-1" strokeWidth={1} />
           </button>
           
           {showModelSelector && models.length > 0 && (
             <div 
-              className="absolute bottom-full right-0 mb-2 w-64 rounded-[20px] shadow-xl z-50 overflow-hidden"
+              className="absolute bottom-full right-0 mb-2 w-64 max-w-[calc(100vw-2rem)] rounded-[20px] shadow-xl z-50 overflow-hidden"
               style={{
                 transform: 'translateZ(0)',
                 willChange: 'transform'

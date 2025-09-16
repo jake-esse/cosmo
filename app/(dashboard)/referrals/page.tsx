@@ -96,7 +96,7 @@ export default async function ReferralsPage() {
   const referralUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://cosmo.ai'}/signup?ref=${stats.referralCode}`
   
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto px-4 py-4 md:px-6 md:py-6">
       {/* Page Header */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-4">
@@ -119,8 +119,8 @@ export default async function ReferralsPage() {
       </div>
       
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8">
+        <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-gray-600">Total Referred</p>
             <Users className="h-4 w-4 text-gray-400" />
@@ -131,7 +131,7 @@ export default async function ReferralsPage() {
           <p className="text-xs text-gray-500 mt-1">friends invited</p>
         </div>
         
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-gray-600">Completed</p>
             <Award className="h-4 w-4 text-green-500" />
@@ -142,7 +142,7 @@ export default async function ReferralsPage() {
           <p className="text-xs text-gray-500 mt-1">verified signups</p>
         </div>
         
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-gray-600">Pending</p>
             <Clock className="h-4 w-4 text-yellow-500" />
@@ -153,7 +153,7 @@ export default async function ReferralsPage() {
           <p className="text-xs text-gray-500 mt-1">awaiting verification</p>
         </div>
         
-        <div className="bg-white p-6 rounded-lg border border-gray-200">
+        <div className="bg-white p-4 md:p-6 rounded-lg border border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <p className="text-sm font-medium text-gray-600">Points Earned</p>
             <TrendingUp className="h-4 w-4 text-blue-500" />
@@ -177,7 +177,7 @@ export default async function ReferralsPage() {
           <Award className="h-5 w-5 text-blue-600" />
           How It Works
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <div className="flex gap-3">
             <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
               <span className="text-sm font-semibold text-blue-600">1</span>

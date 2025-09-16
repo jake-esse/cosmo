@@ -442,6 +442,9 @@ export function ChatInterface({
   }
 
 
+  // Check if we have actual messages with content
+  const hasMessages = messages.some(m => m.content && m.content.trim().length > 0)
+
   return (
     <div className="flex flex-col h-full">
       {/* Messages Area with conditional background */}
@@ -449,7 +452,7 @@ export function ChatInterface({
         ref={scrollContainerRef}
         className="flex-1 overflow-y-auto flex flex-col relative"
       >
-        {/* Background layer with transition */}
+        {/* Background layer with transition - Show on both mobile and desktop */}
         <div 
           className="absolute inset-0 transition-opacity duration-700 ease-in-out"
           style={{
@@ -457,16 +460,16 @@ export function ChatInterface({
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            opacity: messages.length === 0 ? 1 : 0,
+            opacity: !hasMessages ? 1 : 0,
             pointerEvents: 'none'
           }}
         />
         
-        {/* White overlay that fades in when messages appear */}
+        {/* White overlay that fades in when messages appear - Desktop only */}
         <div 
           className="absolute inset-0 bg-white transition-opacity duration-700 ease-in-out"
           style={{
-            opacity: messages.length > 0 ? 1 : 0,
+            opacity: hasMessages ? 1 : 0,
             pointerEvents: 'none'
           }}
         />
@@ -484,34 +487,52 @@ export function ChatInterface({
         )}
 
         {/* Empty state with input centered below greeting */}
-        {!isLoadingConversation && messages.length === 0 && (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center w-full max-w-3xl px-6">
-              <div className="flex items-end gap-0.5 mb-6">
-                <VineIcon className="w-16 h-16 text-white" />
-                <h2 className="text-5xl font-brand text-white">
+        {!isLoadingConversation && !hasMessages && (
+          <div className="flex-1 flex flex-col">
+            {/* Logo + Ampel at top for mobile, hidden on desktop */}
+            <div className="md:hidden pt-16 pb-8 text-center">
+              <div className="flex items-end justify-center gap-2">
+                <VineIcon className="w-10 h-10 text-white" />
+                <span className="font-sans font-medium text-[32px] text-white tracking-[-1.5px] leading-[0.75]">
+                  Ampel
+                </span>
+              </div>
+            </div>
+            
+            {/* Centered content */}
+            <div className="flex-1 flex items-center justify-center">
+              <div className="flex flex-col items-center w-full max-w-3xl px-2 md:px-6">
+                {/* Desktop: icon + text, Mobile: text only */}
+                <div className="hidden md:flex items-end gap-0.5 mb-6">
+                  <VineIcon className="w-16 h-16 text-white flex-shrink-0" />
+                  <h2 className="text-5xl font-brand text-white text-left leading-[0.9]">
+                    How can I help you today?
+                  </h2>
+                </div>
+                {/* Mobile: text only */}
+                <h2 className="md:hidden text-[28px] font-brand text-white text-center mb-6 leading-[0.9]">
                   How can I help you today?
                 </h2>
-              </div>
-              {/* Input with same width as chat messages */}
-              <div className="w-full">
-                <ChatInput 
-                  onSend={handleSendMessage}
-                  isLoading={isLoading}
-                  selectedModelId={lastSelectedModel}
-                  onModelChange={handleModelChange}
-                  conversationModel={conversationModel}
-                  hasMessages={messages.length > 0}
-                />
+                {/* Input with same width as chat messages */}
+                <div className="w-full flex justify-center">
+                  <ChatInput 
+                    onSend={handleSendMessage}
+                    isLoading={isLoading}
+                    selectedModelId={lastSelectedModel}
+                    onModelChange={handleModelChange}
+                    conversationModel={conversationModel}
+                    hasMessages={messages.length > 0}
+                  />
+                </div>
               </div>
             </div>
           </div>
         )}
 
         {/* Messages */}
-        {!isLoadingConversation && messages.length > 0 && (
-          <div className="py-6">
-            <div className="flex flex-col items-center px-6">
+        {!isLoadingConversation && hasMessages && (
+          <div className="py-4 md:py-6">
+            <div className="flex flex-col items-center px-4 md:px-6">
               <div className="w-full max-w-3xl space-y-4">
                 {/* Error display */}
                 {chatError && (
@@ -565,8 +586,8 @@ export function ChatInterface({
       </div>
 
       {/* Chat Input - only at bottom when messages exist */}
-      {!isLoadingConversation && messages.length > 0 && (
-        <div className="p-6 bg-white">
+      {!isLoadingConversation && hasMessages && (
+        <div className="p-4 md:p-6 bg-white">
           <div className="max-w-3xl mx-auto">
             <ChatInput 
               onSend={handleSendMessage}

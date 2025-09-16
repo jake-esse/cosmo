@@ -31,7 +31,8 @@ const menuItems: MenuItem[] = [
   { label: 'Chats', href: '/chat/history', icon: ChatsIcon },
   { label: 'Apps', href: '/apps', icon: AppsIcon },
   { label: 'Shares', href: '/shares', icon: SharesIcon },
-  { label: 'Data', href: '/data', icon: DataIcon },
+  { label: 'Referrals', href: '/referrals', icon: SharesIcon },
+  { label: 'Data', href: '/data-controls', icon: DataIcon },
 ]
 
 const accountMenuItems = [

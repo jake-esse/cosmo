@@ -14,7 +14,7 @@ export default function LandingPage() {
       <FloatingNav />
 
       {/* Main Container */}
-      <div className="relative flex flex-col items-center px-10 pb-5">
+      <div className="relative flex flex-col items-center px-4 md:px-10 pb-5">
         {/* Main Navigation */}
         <div className="w-full max-w-[1200px] mx-auto">
           <MainNav />

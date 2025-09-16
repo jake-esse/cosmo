@@ -6,7 +6,7 @@ import { Shield, Eye, Download, Trash2, Lock, AlertCircle } from "lucide-react"
 export default function DataControlsPage() {
   return (
     <PageTransition>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto px-4 py-4 md:px-6 md:py-6">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-black mb-2">Data Controls</h1>

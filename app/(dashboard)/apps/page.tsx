@@ -26,17 +26,17 @@ export default function AppsPage() {
   
   return (
     <PageLayout pageName="Apps">
-      <div className="max-w-6xl mx-auto p-8">
+      <div className="max-w-6xl mx-auto p-4 md:p-8">
         {/* Featured App - Ampel */}
         <div className="mb-8">
           <Link href="/apps/ampel" className="block">
-            <div className="bg-white rounded-[30px] border border-[#B0C4C9] hover:border-[#DFECC6] transition-all hover:shadow-lg p-8">
-              <div className="flex items-start justify-between mb-6">
+            <div className="bg-white rounded-[30px] border border-[#B0C4C9] hover:border-[#DFECC6] transition-all hover:shadow-lg p-6 md:p-8">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 gap-4">
                 <div>
                   <h3 className="font-brand text-heading-lg text-slate-900 mb-2">Ampel</h3>
                   <p className="font-sans text-body-lg text-slate-600">AI App Store Platform</p>
                 </div>
-                <div className="flex flex-col gap-2 items-end">
+                <div className="flex flex-col gap-2 sm:items-end">
                   <span className="px-4 py-1.5 rounded-[1000px] text-label-md bg-[#485C11] text-white font-semibold">
                     Earn Real Shares
                   </span>
@@ -51,7 +51,7 @@ export default function AppsPage() {
                 earn more by referring friends, and participate in the future of AI applications.
               </p>
               
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div className="text-center p-4 bg-[#DFECC6]/30 rounded-[20px] border border-[#DFECC6]/50">
                   <p className="font-brand text-3xl font-normal text-slate-900">100</p>
                   <p className="font-sans text-label-sm text-slate-600 mt-1 font-medium">Shares on Signup</p>
@@ -66,8 +66,8 @@ export default function AppsPage() {
                 </div>
               </div>
               
-              <div className="flex items-center justify-between pt-4 border-t border-[#B0C4C9]/40">
-                <div className="flex items-center gap-4 font-sans text-body-md text-slate-600">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-[#B0C4C9]/40 gap-4">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4 font-sans text-body-md text-slate-600">
                   <span>1,200+ shareholders</span>
                   <span>•</span>
                   <span>Ends Dec 31, 2025</span>
@@ -81,7 +81,7 @@ export default function AppsPage() {
         </div>
         
         {/* Waitlist Card */}
-        <div className="bg-[#485C11] rounded-[30px] border border-[#485C11] p-10">
+        <div className="bg-[#485C11] rounded-[30px] border border-[#485C11] p-6 md:p-10">
           <div className="max-w-2xl mx-auto text-center">
             <h3 className="font-brand text-heading-lg text-white mb-3">Coming Soon</h3>
             <p className="font-sans text-body-lg text-[#DFECC6] mb-2">Build or connect an app on Ampel</p>
@@ -90,7 +90,7 @@ export default function AppsPage() {
               Join the waitlist to get early access and exclusive benefits.
             </p>
             
-            <form onSubmit={handleWaitlistSubmit} className="flex gap-3 max-w-md mx-auto">
+            <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
               <input
                 type="email"
                 value={email}

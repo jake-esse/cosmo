@@ -218,21 +218,21 @@ export default function SharesPage() {
 
   return (
     <div className="relative w-full h-full bg-white">
-      {/* Header - Crimson font matching chat page */}
-      <div className="absolute left-[17px] top-[9px] h-[47px] flex items-center">
+      {/* Header - Hidden on mobile, shown on desktop */}
+      <div className="hidden md:block absolute left-[17px] top-[9px] h-[47px] z-10">
         <span className="font-brand text-[20px] leading-[22px] font-semibold text-slate-900">
           Shares
         </span>
       </div>
 
-      {/* Main Container - matching chat page structure */}
-      <div className="absolute left-[5px] top-[62px] right-[11px] bottom-[11px] bg-white rounded-[30px] border border-[#B0C4C9]/40 shadow-md overflow-y-auto">
-        <div className="p-8">
+      {/* Main Container - Full screen on mobile, card on desktop */}
+      <div className="absolute inset-0 md:inset-[5px_11px_11px_5px] md:top-[62px] bg-white md:rounded-[30px] md:border border-[#B0C4C9]/40 md:shadow-md overflow-y-auto">
+        <div className="p-4 md:p-8">
           
           {/* Portfolio Summary Card */}
-          <div className="mb-8 bg-[#485C11] text-white rounded-[30px] p-8">
+          <div className="mb-8 bg-[#485C11] text-white rounded-[20px] md:rounded-[30px] p-6 md:p-8">
             <h2 className="font-brand text-heading-lg mb-6">Portfolio Summary</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <p className="font-sans text-label-md text-[#DFECC6] mb-1">Total Equity Balance</p>
                 <p className="font-brand text-3xl">{totalBalance.toLocaleString()}</p>
@@ -249,7 +249,7 @@ export default function SharesPage() {
           </div>
           
           {/* Shares Table in shaded box */}
-          <div className="mb-12 bg-[#DFECC6]/20 rounded-[20px] p-6 border border-[#DFECC6]/40">
+          <div className="mb-8 md:mb-12 bg-[#DFECC6]/20 rounded-[20px] p-4 md:p-6 border border-[#DFECC6]/40">
             {apps.length === 0 ? (
               <div className="text-center py-12">
                 <p className="font-sans text-body-lg text-slate-500">No shares yet</p>
@@ -258,8 +258,8 @@ export default function SharesPage() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full table-fixed">
+              <div className="overflow-x-auto -mx-2">
+                <table className="w-full min-w-[500px]">
                   <colgroup>
                     <col className="w-[35%]" />
                     <col className="w-[20%]" />
@@ -317,14 +317,14 @@ export default function SharesPage() {
           </div>
           
           {/* Rewards Table with outline box */}
-          <div className="border border-[#B0C4C9]/40 rounded-[20px] p-6">
+          <div className="border border-[#B0C4C9]/40 rounded-[20px] p-4 md:p-6">
             {transactions.length === 0 ? (
               <div className="text-center py-12">
                 <p className="font-sans text-body-lg text-slate-500">No rewards yet</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full table-fixed">
+              <div className="overflow-x-auto -mx-2">
+                <table className="w-full min-w-[500px]">
                   <colgroup>
                     <col className="w-[35%]" />
                     <col className="w-[20%]" />

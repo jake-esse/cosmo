@@ -6,7 +6,7 @@ import { Settings, Bell, Lock, Globe, Palette, HelpCircle } from "lucide-react"
 export default function SettingsPage() {
   return (
     <PageTransition>
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto px-4 py-4 md:px-6 md:py-6">
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-black mb-2">Settings</h1>
@@ -110,11 +110,11 @@ export default function SettingsPage() {
           </div>
           
           {/* Actions */}
-          <div className="flex justify-between pt-4">
-            <button className="px-6 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors">
+          <div className="flex flex-col sm:flex-row gap-3 sm:justify-between pt-4">
+            <button className="px-6 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 transition-colors order-2 sm:order-1">
               Cancel
             </button>
-            <button className="px-6 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors text-sm font-medium">
+            <button className="px-6 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-colors text-sm font-medium order-1 sm:order-2">
               Save Changes
             </button>
           </div>

@@ -17,8 +17,8 @@ const FixedSidebar = dynamic(
   }
 )
 
-const MobileSidebar = dynamic(
-  () => import('@/components/layout/MobileSidebar').then(mod => mod.MobileSidebar),
+const MobileMenu = dynamic(
+  () => import('@/components/layout/MobileMenu').then(mod => mod.MobileMenu),
   { 
     ssr: false,
     loading: () => null
@@ -75,23 +75,21 @@ export default function DashboardLayout({
 
   if (loading || !userInfo) {
     return (
-      <div className="h-screen bg-white relative">
-        {/* Brand Section - Matching landing page exactly */}
-        <div className="absolute left-[20px] top-[9px] h-[47px] z-10">
+      <div className="h-screen bg-white relative md:block">
+        {/* Desktop Brand Section */}
+        <div className="hidden md:block absolute left-[20px] top-[9px] h-[47px] z-10">
           <div className="relative h-full">
-            {/* Logo */}
             <div className="absolute left-0 top-[8px] w-[32px] h-[31px] flex items-center justify-center">
               <VineIcon className="w-full h-full text-black" />
             </div>
-            {/* Ampel text - smaller size, closer to logo, lowered by 2px */}
             <span className="absolute left-[30px] top-1/2 -translate-y-1/2 mt-[2px] font-sans font-medium text-[26px] text-black tracking-[-1.5px]">
               Ampel
             </span>
           </div>
         </div>
         
-        {/* Main Content Area - starts at 238px (9px + 224px + 5px) with reduced gap */}
-        <main className="absolute left-[238px] top-0 right-0 bottom-0">
+        {/* Main Content Area - Responsive positioning */}
+        <main className="md:absolute md:left-[238px] md:top-0 md:right-0 md:bottom-0 w-full md:w-auto h-full overflow-hidden">
           {children}
         </main>
       </div>
@@ -99,15 +97,15 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="h-screen bg-white relative">
-      {/* Brand Section - Matching landing page exactly */}
-      <div className="absolute left-[20px] top-[9px] h-[47px] z-10">
+    <div className="h-screen bg-white relative md:block">
+      {/* Brand Section Desktop - Hidden on mobile */}
+      <div className="hidden md:block absolute left-[20px] top-[9px] h-[47px] z-10">
         <div className="relative h-full">
           {/* Logo */}
           <div className="absolute left-0 top-[8px] w-[32px] h-[31px] flex items-center justify-center">
             <VineIcon className="w-full h-full text-black" />
           </div>
-          {/* Ampel text - smaller size, closer to logo, lowered by 2px */}
+          {/* Ampel text - desktop size */}
           <span className="absolute left-[30px] top-1/2 -translate-y-1/2 mt-[2px] font-sans font-medium text-[26px] text-black tracking-[-1.5px]">
             Ampel
           </span>
@@ -119,11 +117,11 @@ export default function DashboardLayout({
         <FixedSidebar user={userInfo} />
       </div>
       
-      {/* Mobile Sidebar - Visible on mobile only */}
-      <MobileSidebar user={userInfo} />
+      {/* Mobile Menu - Visible on mobile only */}
+      <MobileMenu user={userInfo} />
       
-      {/* Main Content Area - starts at 238px (9px + 224px + 5px) with reduced gap */}
-      <main className="absolute left-[238px] top-0 right-0 bottom-0">
+      {/* Main Content Area - Responsive positioning */}
+      <main className="md:absolute md:left-[238px] md:top-0 md:right-0 md:bottom-0 w-full md:w-auto h-full overflow-hidden">
         {children}
       </main>
     </div>
