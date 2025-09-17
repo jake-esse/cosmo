@@ -35,11 +35,18 @@ export async function middleware(request: NextRequest) {
   const isDashboard = request.nextUrl.pathname.startsWith('/dashboard')
   const isOnboarding = request.nextUrl.pathname.startsWith('/onboarding')
   const isApiRoute = request.nextUrl.pathname.startsWith('/api')
-  const isPublicRoute = request.nextUrl.pathname === '/' || 
-                        request.nextUrl.pathname === '/about' || 
+  const isChat = request.nextUrl.pathname.startsWith('/chat')
+  const isPublicRoute = request.nextUrl.pathname === '/' ||
+                        request.nextUrl.pathname === '/about' ||
                         request.nextUrl.pathname === '/pricing'
 
   if (!user && isDashboard) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
+  if (!user && isChat) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
@@ -58,17 +65,21 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check onboarding status for authenticated users
-  // TEMPORARILY DISABLED FOR TESTING - uncomment when ready to enforce onboarding
-  // if (user && !isOnboarding && !isApiRoute && !isAuthPage && !isPublicRoute) {
-  //   const { data: status } = await supabase
-  //     .rpc('get_onboarding_status', { p_user_id: user.id })
-    
-  //   if (status?.next_action === 'complete_education') {
-  //     const url = request.nextUrl.clone()
-  //     url.pathname = '/onboarding/education'
-  //     return NextResponse.redirect(url)
-  //   }
-  // }
+  if (user && !isOnboarding && !isApiRoute && !isAuthPage && !isPublicRoute) {
+    // Check if user has completed education
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('education_completed_at')
+      .eq('id', user.id)
+      .single()
+
+    // Redirect to onboarding if education not completed
+    if (!profile?.education_completed_at) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/onboarding'
+      return NextResponse.redirect(url)
+    }
+  }
 
   return supabaseResponse
 }

@@ -31,12 +31,12 @@ const menuItems: MenuItem[] = [
   { label: 'Chats', href: '/chat/history', icon: ChatsIcon },
   { label: 'Apps', href: '/apps', icon: AppsIcon },
   { label: 'Shares', href: '/shares', icon: SharesIcon },
-  { label: 'Referrals', href: '/referrals', icon: SharesIcon },
   { label: 'Data', href: '/data-controls', icon: DataIcon },
 ]
 
 const accountMenuItems = [
   { label: 'Settings', href: '/settings' },
+  { label: 'Referrals', href: '/referrals' },
   { label: 'Log out', href: '/logout' },
 ]
 

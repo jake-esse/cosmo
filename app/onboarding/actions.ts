@@ -33,8 +33,76 @@ export async function completeEducationAcknowledgment(
     throw new Error(data?.error || 'Failed to save acknowledgment')
   }
 
+  // Also mark user as offering participant and set shares claimed time
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      offering_participant: true,
+      shares_claimed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', user.id)
+
+  if (profileError) {
+    console.error('Profile update error:', profileError)
+  }
+
   // Redirect to onboarding complete page
   redirect('/onboarding/complete')
+}
+
+export async function skipSharesForNow(
+  sectionsRead: string[],
+  timeSpent: number
+) {
+  const supabase = await createClient()
+
+  // Get the current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+  if (userError || !user) {
+    throw new Error("You must be logged in to continue")
+  }
+
+  // IMPORTANT: First mark user as NOT participating to prevent any share awards
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .update({
+      offering_participant: false,
+      education_completed_at: new Date().toISOString(),
+      education_version: '1.0',
+      onboarding_step: 'complete',
+      onboarding_completed: true,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', user.id)
+
+  if (profileError) {
+    console.error('Profile update error:', profileError)
+    throw new Error('Failed to update profile')
+  }
+
+  // Save education acknowledgment WITHOUT awarding shares
+  // Since we set offering_participant = false first, no shares will be awarded
+  const { error: ackError } = await supabase
+    .from('education_acknowledgments')
+    .upsert({
+      user_id: user.id,
+      acknowledged_at: new Date().toISOString(),
+      version: '1.0',
+      all_sections_read: true,
+      sections_read: sectionsRead,
+      time_spent_seconds: timeSpent,
+      created_at: new Date().toISOString()
+    })
+
+  if (ackError) {
+    console.error('Education acknowledgment error:', ackError)
+    // Don't throw - this is not critical
+  }
+
+  // Redirect directly to chat (skipping complete page)
+  redirect('/chat')
 }
 
 export async function trackSectionRead(

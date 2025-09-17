@@ -33,8 +33,20 @@ export async function GET(request: Request) {
           // Don't fail auth flow
         }
       }
-      
-      return NextResponse.redirect(new URL('/chat', requestUrl.origin))
+
+      // Check if user has completed education
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('education_completed_at')
+        .eq('id', data.user.id)
+        .single()
+
+      // Redirect to onboarding if education not completed, otherwise to chat
+      if (!profile?.education_completed_at) {
+        return NextResponse.redirect(new URL('/onboarding', requestUrl.origin))
+      } else {
+        return NextResponse.redirect(new URL('/chat', requestUrl.origin))
+      }
     }
   }
 

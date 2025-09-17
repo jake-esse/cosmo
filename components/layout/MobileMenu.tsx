@@ -35,12 +35,12 @@ const menuItems: MenuItem[] = [
   { label: 'Chat History', href: '/chat/history', icon: ChatsIcon },
   { label: 'Apps', href: '/apps', icon: AppsIcon },
   { label: 'Shares', href: '/shares', icon: SharesIcon },
-  { label: 'Referrals', href: '/referrals', icon: SharesIcon },
   { label: 'Data Controls', href: '/data-controls', icon: DataIcon },
 ]
 
 const accountMenuItems = [
   { label: 'Settings', href: '/settings' },
+  { label: 'Referrals', href: '/referrals' },
   { label: 'Log out', href: '/logout' },
 ]
 
@@ -186,6 +186,13 @@ export function MobileMenu({ user }: MobileMenuProps) {
                       className="block px-6 py-3 text-center text-white hover:bg-white/10 transition-colors"
                     >
                       <span className="font-sans font-semibold text-[16px]">Settings</span>
+                    </Link>
+                    <Link
+                      href="/referrals"
+                      onClick={() => setIsOpen(false)}
+                      className="block px-6 py-3 text-center text-white hover:bg-white/10 transition-colors border-t border-white/10"
+                    >
+                      <span className="font-sans font-semibold text-[16px]">Referrals</span>
                     </Link>
                     <button
                       onClick={handleLogout}
