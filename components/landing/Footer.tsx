@@ -35,6 +35,12 @@ export function Footer() {
             >
               Log In
             </Link>
+            <Link
+              href="/compliance-portal"
+              className="font-sans font-bold text-[14px] tracking-[-0.35px] text-[#485C11]/60 hover:text-[#485C11] transition-colors"
+            >
+              Compliance
+            </Link>
           </div>
         </div>
 

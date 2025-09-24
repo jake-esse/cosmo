@@ -158,15 +158,15 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
             disabled={isLoading || loadingModels}
           >
             {currentModel ? (
-              <>
+              <div className="flex items-center gap-1">
                 <span className="text-xs md:text-label-lg text-slate-700 hidden sm:inline">
                   {currentModel.display_name}
                 </span>
                 <span className="text-xs md:text-label-lg text-slate-700 sm:hidden">
                   {currentModel.display_name.split(' ')[0]}
                 </span>
-                <span className="hidden sm:inline">{getTierBadge(currentModel.tier_required)}</span>
-              </>
+                {getTierBadge(currentModel.tier_required)}
+              </div>
             ) : (
               <span className="text-xs md:text-label-lg text-slate-500">
                 {loadingModels ? '...' : 'Model'}
@@ -176,24 +176,10 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
           </button>
           
           {showModelSelector && models.length > 0 && (
-            <div 
-              className="absolute bottom-full right-0 mb-2 w-64 max-w-[calc(100vw-2rem)] rounded-[20px] shadow-xl z-50 overflow-hidden"
-              style={{
-                transform: 'translateZ(0)',
-                willChange: 'transform'
-              }}
+            <div
+              className="absolute bottom-full right-0 mb-2 w-64 max-w-[calc(100vw-2rem)] bg-white rounded-[20px] shadow-xl z-50 overflow-hidden border border-slate-200"
             >
-              <div 
-                className="absolute inset-0 rounded-[20px]" 
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.75)',
-                  backdropFilter: 'blur(40px) saturate(200%)',
-                  WebkitBackdropFilter: 'blur(40px) saturate(200%)',
-                  boxShadow: 'inset 0 1px 0 0 rgba(255, 255, 255, 0.2)',
-                  transform: 'translateZ(0)'
-                }}
-              />
-              <div className="relative border border-slate-200/50 rounded-[20px] py-2 max-h-80 overflow-y-auto">
+              <div className="py-2 max-h-80 overflow-y-auto">
               {models.map((model) => {
                 const isDisabled = model.remaining_today === 0
                 const isSelected = model.model_id === selectedModel
@@ -212,11 +198,11 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
                     }}
                     disabled={isDisabled}
                     className={`w-full px-3 py-2 text-left transition-colors ${
-                      isDisabled 
-                        ? 'opacity-50 cursor-not-allowed' 
+                      isDisabled
+                        ? 'opacity-50 cursor-not-allowed'
                         : isSelected
-                        ? 'bg-white/80'
-                        : 'hover:bg-white/60'
+                        ? 'bg-slate-100'
+                        : 'hover:bg-slate-50'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -256,7 +242,7 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
           <button
             onClick={handleSend}
             disabled={!message.trim() || isLoading || !selectedModel}
-            className="w-[35px] h-[35px] bg-slate-900/90 backdrop-blur-sm rounded-[12px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-800 transition-colors"
+            className="w-[35px] h-[35px] bg-[#2A341D] backdrop-blur-sm rounded-[12px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1F2816] transition-colors"
             aria-label="Send message"
           >
             <SendIcon className="w-6 h-6 text-white" />

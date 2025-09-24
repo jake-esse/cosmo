@@ -12,6 +12,7 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
 } from '@/components/icons'
+import { useNotifications } from '@/components/notifications/NotificationProvider'
 
 interface MenuItem {
   label: string
@@ -35,6 +36,7 @@ const menuItems: MenuItem[] = [
 ]
 
 const accountMenuItems = [
+  { label: 'Notifications', href: '/notifications' },
   { label: 'Settings', href: '/settings' },
   { label: 'Referrals', href: '/referrals' },
   { label: 'Log out', href: '/logout' },
@@ -43,11 +45,16 @@ const accountMenuItems = [
 export function FixedSidebar({ user }: FixedSidebarProps) {
   const pathname = usePathname()
   const [accountExpanded, setAccountExpanded] = useState(false)
+  const { unreadCount } = useNotifications()
 
   const isActive = (href: string) => {
     // Only highlight Chats when on the history page specifically
     if (href === '/chat/history') {
       return pathname === '/chat/history'
+    }
+    // Highlight notifications when on notifications page
+    if (href === '/notifications') {
+      return pathname === '/notifications'
     }
     return pathname === href
   }
@@ -81,7 +88,7 @@ export function FixedSidebar({ user }: FixedSidebarProps) {
               className="flex items-center gap-1 w-full group"
             >
               <div
-                className="relative w-10 h-10 rounded-full bg-white/40 backdrop-blur-[15px] 
+                className="relative w-10 h-10 rounded-full bg-white/40 backdrop-blur-[15px]
                            transition-all duration-200 ease-out
                            group-hover:bg-white/60 group-hover:scale-[1.05]
                            group-active:scale-[0.98]
@@ -132,9 +139,14 @@ export function FixedSidebar({ user }: FixedSidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className="block px-[19px] py-2 text-body-md text-white hover:bg-white/40"
+                className="block px-[19px] py-2 text-body-md text-white hover:bg-white/40 flex items-center justify-between"
               >
-                {item.label}
+                <span>{item.label}</span>
+                {item.label === 'Notifications' && unreadCount > 0 && (
+                  <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold bg-red-500 text-white rounded-full">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </Link>
             ))}
           </div>

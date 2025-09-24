@@ -184,14 +184,29 @@ export function ChatInterface({
     }
   }
 
-  // Auto-scroll to bottom when new messages are added
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  // Scroll to user message when AI starts responding
+  const scrollToUserMessage = () => {
+    // Find the last user message element
+    const userMessages = document.querySelectorAll('[data-message-role="user"]')
+    if (userMessages.length > 0) {
+      const lastUserMessage = userMessages[userMessages.length - 1]
+      lastUserMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
   }
 
+  // Only scroll when AI message is being added (not on every message change)
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    // Check if the last message is from assistant and we have at least 2 messages
+    if (messages.length >= 2) {
+      const lastMessage = messages[messages.length - 1]
+      const secondLastMessage = messages[messages.length - 2]
+
+      // Scroll to user message when AI starts responding
+      if (lastMessage.role === 'assistant' && secondLastMessage.role === 'user') {
+        scrollToUserMessage()
+      }
+    }
+  }, [messages.length])
 
   const handleSendMessage = async (content: string, model: string) => {
     console.log('Sending message with model:', model, 'Content:', content)
@@ -465,14 +480,7 @@ export function ChatInterface({
           }}
         />
         
-        {/* White overlay that fades in when messages appear - Desktop only */}
-        <div 
-          className="absolute inset-0 bg-white transition-opacity duration-700 ease-in-out"
-          style={{
-            opacity: hasMessages ? 1 : 0,
-            pointerEvents: 'none'
-          }}
-        />
+        {/* Remove white overlay to allow glassmorphism effect */}
         
         {/* Content layer */}
         <div className="relative z-10 flex-1 flex flex-col">
@@ -504,7 +512,7 @@ export function ChatInterface({
               <div className="flex flex-col items-center w-full max-w-3xl px-2 md:px-6">
                 {/* Desktop: icon + text, Mobile: text only */}
                 <div className="hidden md:flex items-end gap-0.5 mb-6">
-                  <VineIcon className="w-16 h-16 text-white flex-shrink-0" />
+                  <VineIcon className="w-16 h-16 text-white flex-shrink-0 mb-[-3px]" />
                   <h2 className="text-5xl font-brand text-white text-left leading-[0.9]">
                     How can I help you today?
                   </h2>
@@ -531,7 +539,7 @@ export function ChatInterface({
 
         {/* Messages */}
         {!isLoadingConversation && hasMessages && (
-          <div className="py-4 md:py-6">
+          <div className="py-4 md:py-6 pb-[180px] md:pb-[200px] bg-white">
             <div className="flex flex-col items-center px-4 md:px-6">
               <div className="w-full max-w-3xl space-y-4">
                 {/* Error display */}
@@ -547,9 +555,9 @@ export function ChatInterface({
                 )}
                 
                 {messages.map((message, index) => (
-                  <div key={message.id} className="w-full">
+                  <div key={message.id} className="w-full" data-message-role={message.role}>
                     {message.role === 'user' ? (
-                      <MessageUser 
+                      <MessageUser
                         message={message.content}
                         timestamp={message.timestamp}
                         userInitials={userInitials}
@@ -557,7 +565,7 @@ export function ChatInterface({
                         onEdit={(newContent) => handleEditMessage(index, newContent)}
                       />
                     ) : message.role === 'assistant' ? (
-                      <MessageAI 
+                      <MessageAI
                         message={message.id === streamingMessageId ? streamingContent : message.content}
                         timestamp={message.timestamp}
                         model={message.model}
@@ -585,11 +593,11 @@ export function ChatInterface({
         </div>
       </div>
 
-      {/* Chat Input - only at bottom when messages exist */}
+      {/* Chat Input - fixed at bottom when messages exist */}
       {!isLoadingConversation && hasMessages && (
-        <div className="p-4 md:p-6 bg-white">
+        <div className="fixed bottom-0 left-0 right-0 md:left-[240px] p-4 md:p-6 z-20">
           <div className="max-w-3xl mx-auto">
-            <ChatInput 
+            <ChatInput
               onSend={handleSendMessage}
               isLoading={isLoading}
               selectedModelId={lastSelectedModel}

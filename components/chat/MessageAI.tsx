@@ -138,38 +138,38 @@ export const MessageAI = memo(function MessageAI({ message, timestamp, isLoading
         </ReactMarkdown>
       </div>
       
-      {/* Footer with vine logo and model name only */}
-      <div className="flex items-center justify-between text-label-sm text-slate-500">
+      {/* Footer with vine logo and model name only - fixed height to prevent shift */}
+      <div className="flex items-center justify-between text-label-sm text-slate-500 h-8">
         <div className="flex items-center gap-4">
           <VineIcon className="w-5 h-5 text-slate-400" />
           {model && <span className="text-label-sm">Model: {model}</span>}
         </div>
-        
-        {/* Action buttons */}
-        {!isLoading && isHovered && (
-          <div className="flex items-center gap-1">
-            <button
-              onClick={handleCopy}
-              className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-200 rounded transition-colors"
-              title="Copy message"
-            >
-              {copied ? (
-                <Check className="w-4 h-4 text-green-600" />
-              ) : (
-                <Copy className="w-4 h-4 text-slate-600" />
-              )}
-            </button>
-            {isLastMessage && onRegenerate && (
-              <button
-                onClick={onRegenerate}
-                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-200 rounded transition-colors"
-                title="Regenerate response"
-              >
-                <RefreshCw className="w-4 h-4 text-slate-600" />
-              </button>
+
+        {/* Action buttons - always render but control visibility */}
+        <div className={`flex items-center gap-1 transition-opacity duration-200 ${!isLoading && isHovered ? 'opacity-100' : 'opacity-0'}`}>
+          <button
+            onClick={handleCopy}
+            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-200 rounded transition-colors"
+            title="Copy message"
+            disabled={!isHovered}
+          >
+            {copied ? (
+              <Check className="w-4 h-4 text-green-600" />
+            ) : (
+              <Copy className="w-4 h-4 text-slate-600" />
             )}
-          </div>
-        )}
+          </button>
+          {isLastMessage && onRegenerate && (
+            <button
+              onClick={onRegenerate}
+              className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-200 rounded transition-colors"
+              title="Regenerate response"
+              disabled={!isHovered}
+            >
+              <RefreshCw className="w-4 h-4 text-slate-600" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

@@ -125,6 +125,51 @@ export default function AmpelOfferingPage() {
                 <DiscussionTab />
               )}
             </div>
+
+            {/* Regulatory Footer */}
+            <div className="max-w-6xl mx-auto px-8 py-12 mt-8 border-t border-slate-200">
+              <div className="space-y-4 text-xs text-slate-500 leading-relaxed">
+                <p className="font-medium text-slate-600">
+                  Startups are speculative, can be illiquid, and involve a high degree of risk, including the possible loss of your entire investment.
+                </p>
+
+                <p>
+                  This website, which we refer to as the "Site," is used by two different companies: Loupt Portal LLC and Loupt Offerings LLC.
+                </p>
+
+                <p>
+                  Loupt Offerings LLC offers investments under Rule 506(c) issued by the Securities and Exchange Commission (SEC). These investments are offered to accredited investors only.
+                </p>
+
+                <p>
+                  Loupt Portal LLC is a "funding portal" as defined in section 3(a)(80) of the Securities Exchange Act of 1934. Here, you can review investment opportunities of companies offering securities under section 4(a)(6) of the Securities Act of 1933, also known as Regulation Crowdfunding or Reg CF. These investments are offered to everyone, not just to accredited investors.
+                </p>
+
+                <p>
+                  By using this Site, you are subject to our Terms of Use and our Privacy Policy. Please read these carefully before using the Site.
+                </p>
+
+                <p>
+                  Although our website offers investors the opportunity to invest in a variety of companies, we do not make recommendations regarding the appropriateness of a particular investment opportunity for any particular investor. We are not investment advisers. Investors must make their own investment decisions, either alone or with their personal advisors.
+                </p>
+
+                <p>
+                  You should view all of the investment opportunities on our website as risky. You should consider investing only if you can afford to lose your entire investment.
+                </p>
+
+                <p>
+                  We provide financial projections for some of the investment opportunities listed on the Site. All such financial projections are only estimates based on current conditions and current assumptions. The actual result of any investment is likely to be different than the original projection, often by a large amount.
+                </p>
+
+                <p>
+                  Neither the Securities and Exchange Commission nor any state agency has reviewed the investment opportunities listed on the Site.
+                </p>
+
+                <p>
+                  Thank you for using the Site. If you have questions, please contact us at <a href="mailto:contact@investloupt.com" className="text-slate-600 hover:text-slate-700 underline">contact@investloupt.com</a>
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </PageLayout>

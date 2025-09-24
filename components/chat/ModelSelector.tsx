@@ -101,6 +101,8 @@ export function ModelSelector({ value, onChange, disabled, conversationModel, ha
         return 'Anthropic';
       case 'google':
         return 'Google';
+      case 'xai':
+        return 'xAI';
       default:
         return provider;
     }

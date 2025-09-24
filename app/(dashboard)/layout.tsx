@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { redirect } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { VineIcon } from '@/components/icons'
+import { NotificationProvider } from '@/components/notifications/NotificationProvider'
+import { Toaster } from '@/components/ui/sonner'
 
 // Dynamically import sidebars to avoid SSR hydration issues
 const FixedSidebar = dynamic(
@@ -73,57 +75,42 @@ export default function DashboardLayout({
     loadUser()
   }, [])
 
-  if (loading || !userInfo) {
-    return (
+  return (
+    <NotificationProvider>
       <div className="h-screen bg-white relative md:block">
-        {/* Desktop Brand Section */}
+        {/* Brand Section Desktop - Hidden on mobile */}
         <div className="hidden md:block absolute left-[20px] top-[9px] h-[47px] z-10">
           <div className="relative h-full">
+            {/* Logo */}
             <div className="absolute left-0 top-[8px] w-[32px] h-[31px] flex items-center justify-center">
               <VineIcon className="w-full h-full text-black" />
             </div>
+            {/* Ampel text - desktop size */}
             <span className="absolute left-[30px] top-1/2 -translate-y-1/2 mt-[2px] font-sans font-medium text-[26px] text-black tracking-[-1.5px]">
               Ampel
             </span>
           </div>
         </div>
-        
+
+        {/* Fixed Desktop Sidebar - Hidden on mobile, show skeleton while loading */}
+        <div className="hidden md:block">
+          {loading || !userInfo ? (
+            <aside className="absolute left-[9px] top-[62px] bottom-[11px] w-[224px] rounded-[30px] bg-gray-100 animate-pulse" />
+          ) : (
+            <FixedSidebar user={userInfo} />
+          )}
+        </div>
+
+        {/* Mobile Menu - Visible on mobile only */}
+        <MobileMenu user={userInfo} />
+
         {/* Main Content Area - Responsive positioning */}
         <main className="md:absolute md:left-[238px] md:top-0 md:right-0 md:bottom-0 w-full md:w-auto h-full overflow-hidden">
           {children}
         </main>
-      </div>
-    )
-  }
 
-  return (
-    <div className="h-screen bg-white relative md:block">
-      {/* Brand Section Desktop - Hidden on mobile */}
-      <div className="hidden md:block absolute left-[20px] top-[9px] h-[47px] z-10">
-        <div className="relative h-full">
-          {/* Logo */}
-          <div className="absolute left-0 top-[8px] w-[32px] h-[31px] flex items-center justify-center">
-            <VineIcon className="w-full h-full text-black" />
-          </div>
-          {/* Ampel text - desktop size */}
-          <span className="absolute left-[30px] top-1/2 -translate-y-1/2 mt-[2px] font-sans font-medium text-[26px] text-black tracking-[-1.5px]">
-            Ampel
-          </span>
-        </div>
+        <Toaster position="top-right" />
       </div>
-      
-      {/* Fixed Desktop Sidebar - Hidden on mobile */}
-      <div className="hidden md:block">
-        <FixedSidebar user={userInfo} />
-      </div>
-      
-      {/* Mobile Menu - Visible on mobile only */}
-      <MobileMenu user={userInfo} />
-      
-      {/* Main Content Area - Responsive positioning */}
-      <main className="md:absolute md:left-[238px] md:top-0 md:right-0 md:bottom-0 w-full md:w-auto h-full overflow-hidden">
-        {children}
-      </main>
-    </div>
+    </NotificationProvider>
   )
 }

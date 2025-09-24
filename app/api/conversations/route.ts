@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     if (firstMessage && !title) {
       try {
         const { text } = await generateText({
-          model: openai('gpt-4o-mini'),
+          model: openai('gpt-5-nano'),
           prompt: `Generate a concise title for a conversation that starts with this message. The title should be 4 words maximum, capturing the main topic or intent. Do not use articles (a, an, the) or filler words. Focus on the key nouns and verbs. Return ONLY the title, nothing else.
 
 User's first message: "${firstMessage}"

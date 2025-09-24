@@ -19,7 +19,7 @@ async function testOpenAI(): Promise<ProviderTestResult> {
     importSuccess: false,
     modelCreation: false,
     apiKeyFound: !!process.env.OPENAI_API_KEY,
-    modelId: 'gpt-4o-mini'
+    modelId: 'gpt-5-nano'
   }
   
   try {
@@ -27,7 +27,7 @@ async function testOpenAI(): Promise<ProviderTestResult> {
     result.importSuccess = true
     
     try {
-      const model = openai('gpt-4o-mini')
+      const model = openai('gpt-5-nano')
       result.modelCreation = !!model
       result.testMessage = 'OpenAI provider initialized successfully'
     } catch (modelError: any) {
@@ -46,7 +46,7 @@ async function testAnthropic(): Promise<ProviderTestResult> {
     importSuccess: false,
     modelCreation: false,
     apiKeyFound: !!process.env.ANTHROPIC_API_KEY,
-    modelId: 'claude-3-5-sonnet-20241022'
+    modelId: 'claude-3-5-haiku-latest'
   }
   
   try {
@@ -54,7 +54,7 @@ async function testAnthropic(): Promise<ProviderTestResult> {
     result.importSuccess = true
     
     try {
-      const model = anthropic('claude-3-5-sonnet-20241022')
+      const model = anthropic('claude-3-5-haiku-latest')
       result.modelCreation = !!model
       result.testMessage = 'Anthropic provider initialized successfully'
     } catch (modelError: any) {
@@ -73,7 +73,7 @@ async function testGoogle(): Promise<ProviderTestResult> {
     importSuccess: false,
     modelCreation: false,
     apiKeyFound: !!process.env.GOOGLE_AI_API_KEY,
-    modelId: 'gemini-1.5-flash'
+    modelId: 'gemini-2.5-flash-lite'
   }
   
   try {
@@ -81,7 +81,7 @@ async function testGoogle(): Promise<ProviderTestResult> {
     result.importSuccess = true
     
     try {
-      const model = google('gemini-1.5-flash')
+      const model = google('gemini-2.5-flash-lite')
       result.modelCreation = !!model
       result.testMessage = 'Google provider initialized successfully'
     } catch (modelError: any) {

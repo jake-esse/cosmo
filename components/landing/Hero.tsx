@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export function Hero() {
   return (
     <header className="w-full max-w-[1200px] mx-auto min-h-[500px] md:h-[738px] relative overflow-clip px-4 md:px-0">
@@ -8,11 +10,19 @@ export function Hero() {
         </h1>
       </div>
 
-      {/* Subheadline - Responsive */}
-      <div className="absolute left-1/2 -translate-x-1/2 top-32 md:top-56 w-full md:w-[1060px] text-center px-4 md:px-0">
+      {/* Subheadline with Chat button - Responsive */}
+      <div className="absolute left-1/2 -translate-x-1/2 top-[140px] md:top-[248px] w-full md:w-[1060px] px-4 md:px-0 flex items-center justify-center gap-4">
         <p className="font-sans font-normal text-lg sm:text-xl md:text-[30px] leading-[1.4] tracking-[-0.15px] text-[#6F6F6F]">
           Abundance only matters if it&apos;s shared.
         </p>
+        <Link
+          href="/signup"
+          className="px-[22px] py-3.5 bg-[#DFECC6] rounded-[1000px] hover:bg-[#DFECC6]/80 transition-colors"
+        >
+          <span className="font-sans font-bold text-[14px] tracking-[-0.35px] text-black">
+            Chat with Ampel
+          </span>
+        </Link>
       </div>
 
       {/* Hero Image with Overlay - Responsive */}

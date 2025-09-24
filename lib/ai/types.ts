@@ -1,6 +1,6 @@
 export interface ModelConfig {
   model_id: string;
-  provider: 'openai' | 'anthropic' | 'google';
+  provider: 'openai' | 'anthropic' | 'google' | 'xai';
   display_name: string;
   tier_required: 'free' | 'plus' | 'pro';
   max_context_tokens: number;

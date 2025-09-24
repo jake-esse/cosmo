@@ -38,8 +38,8 @@ export const MessageUser = memo(function MessageUser({ message, timestamp, userI
   }
 
   return (
-    <div 
-      className="w-full bg-slate-900 text-white rounded-[30px] p-4 flex gap-3 relative group"
+    <div
+      className="w-full bg-[#EEF4F5] text-slate-900 rounded-[30px] p-4 flex gap-3 relative group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -47,17 +47,17 @@ export const MessageUser = memo(function MessageUser({ message, timestamp, userI
       {canEdit && !isEditing && isHovered && (
         <button
           onClick={() => setIsEditing(true)}
-          className="absolute -top-2 right-2 p-1.5 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 rounded shadow-md border border-slate-200 dark:border-slate-700 transition-all duration-200"
+          className="absolute -top-2 right-2 p-1.5 bg-[#2A341D] hover:bg-[#1F2816] rounded-full shadow-md transition-all duration-200"
           title="Edit message"
         >
-          <Edit2 className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+          <Edit2 className="w-4 h-4 text-white" />
         </button>
       )}
 
       {/* User Avatar */}
       <div className="flex-shrink-0">
-        <div className="w-10 h-10 bg-slate-700 rounded-full flex items-center justify-center">
-          <span className="text-label-lg text-white">
+        <div className="w-8 h-8 bg-[#2A341D] rounded-full flex items-center justify-center">
+          <span className="text-sm font-medium text-white">
             {userInitials}
           </span>
         </div>
@@ -71,30 +71,30 @@ export const MessageUser = memo(function MessageUser({ message, timestamp, userI
               value={editedMessage}
               onChange={(e) => setEditedMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full p-2 bg-slate-800 text-white rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-body-md"
+              className="w-full p-3 bg-white text-slate-900 rounded-[12px] resize-none focus:outline-none focus:ring-2 focus:ring-[#2A341D] text-[15px] leading-relaxed border border-slate-200"
               rows={3}
               autoFocus
             />
             <div className="flex gap-2">
               <button
                 onClick={handleSave}
-                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-button-sm transition-colors flex items-center gap-1"
+                className="px-4 py-2 bg-[#2A341D] hover:bg-[#1F2816] text-white rounded-[12px] text-sm font-medium transition-colors flex items-center gap-2"
               >
-                <Check className="w-3 h-3" />
+                <Check className="w-4 h-4" />
                 Save
               </button>
               <button
                 onClick={handleCancel}
-                className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-button-sm transition-colors flex items-center gap-1"
+                className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-[12px] text-sm font-medium transition-colors flex items-center gap-2"
               >
-                <X className="w-3 h-3" />
+                <X className="w-4 h-4" />
                 Cancel
               </button>
             </div>
           </div>
         ) : (
           <div className="space-y-2">
-            <p className="text-body-md text-white whitespace-pre-wrap break-words">
+            <p className="text-[15px] leading-relaxed text-slate-900 whitespace-pre-wrap break-words">
               {message}
             </p>
           </div>
