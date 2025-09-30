@@ -10,27 +10,34 @@ import { VineIcon } from '@/components/icons'
 import { useRouter } from 'next/navigation'
 import { wouldExceedContextLimit } from '@/lib/ai/tokenizer'
 
+export interface SearchSource {
+  sourceType: 'url' | 'x' | 'news' | 'rss';
+  title?: string;
+  url?: string;
+  snippet?: string;
+}
+
 export interface Message {
   id: string
   role: 'user' | 'assistant' | 'system'
   content: string
   timestamp?: string
   model?: string
+  webSearchUsed?: boolean
+  sources?: SearchSource[]
 }
 
 interface ChatInterfaceProps {
   chatId?: string
-  chatName?: string
   initialMessages?: Message[]
   userInitials?: string
-  onSendMessage?: (message: string, model: string) => Promise<string>
+  onSendMessage?: (message: string, reasoning: boolean, webSearch: boolean) => Promise<string>
   onConversationCreated?: (conversationId: string, title: string) => void
   onConversationUpdated?: () => void
 }
 
-export function ChatInterface({ 
+export function ChatInterface({
   chatId,
-  chatName = 'Chat',
   initialMessages = [],
   userInitials = 'JE',
   onSendMessage,
@@ -44,17 +51,25 @@ export function ChatInterface({
   const [isLoadingConversation, setIsLoadingConversation] = useState(!!chatId) // Start loading if we have a chatId
   const [chatError, setChatError] = useState<any>(null)
   const [lastUserMessage, setLastUserMessage] = useState<string>('')
-  const [lastSelectedModel, setLastSelectedModel] = useState<string>('gemini-2.5-flash-lite')
+  const [reasoning, setReasoning] = useState<boolean>(false)
+  const [webSearch, setWebSearch] = useState<boolean>(false)
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null)
   const [streamingContent, setStreamingContent] = useState<string>('')
   const [conversationModel, setConversationModel] = useState<string | null>(null)
   const [totalTokensUsed, setTotalTokensUsed] = useState<number>(0)
   const [showContextLimitDialog, setShowContextLimitDialog] = useState(false)
+  const [waitingForAiResponse, setWaitingForAiResponse] = useState(false)
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [userHasScrolled, setUserHasScrolled] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const lastScrollTop = useRef<number>(0)
 
   // Track if we've loaded this conversation
   const [loadedConversationId, setLoadedConversationId] = useState<string | null>(null)
+
+  // Track if we need to send a pending message after redirect
+  const pendingMessageRef = useRef<boolean>(false)
 
   // Load conversation if chatId is provided
   useEffect(() => {
@@ -76,8 +91,95 @@ export function ChatInterface({
       setConversationModel(null)
       setTotalTokensUsed(0)
       setLoadedConversationId(null)
+
+      // Check if we have a pending message to send (from model change redirect)
+      if (lastUserMessage && messages.length === 0 && !pendingMessageRef.current) {
+        pendingMessageRef.current = true // Prevent duplicate sends
+        // Send the pending message after a short delay
+        const pendingMessage = lastUserMessage
+        const pendingReasoning = reasoning
+        const pendingWebSearch = webSearch
+
+        setTimeout(() => {
+          setLastUserMessage('') // Clear it before sending to avoid loops
+          handleSendMessage(pendingMessage, pendingReasoning, pendingWebSearch)
+          pendingMessageRef.current = false
+        }, 100)
+      }
     }
   }, [chatId, loadedConversationId])
+
+  // Auto-scroll logic for user messages
+  const scrollToLatestUserMessage = useCallback(() => {
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      // Use the ref to get the scroll container
+      const scrollContainer = scrollContainerRef.current
+      if (!scrollContainer) {
+        console.log('[SCROLL] No scroll container found from ref')
+        return
+      }
+
+      // Find all user message elements
+      const userMessages = document.querySelectorAll('[data-message-role="user"]')
+      console.log('[SCROLL] Found', userMessages.length, 'user messages')
+
+      if (userMessages.length === 0) {
+        console.log('[SCROLL] No user messages found')
+        return
+      }
+
+      const latestUserMessage = userMessages[userMessages.length - 1] as HTMLElement
+      if (!latestUserMessage) {
+        console.log('[SCROLL] Latest user message element not found')
+        return
+      }
+
+      // Get the position of the user message relative to the scroll container
+      const containerRect = scrollContainer.getBoundingClientRect()
+      const messageRect = latestUserMessage.getBoundingClientRect()
+
+      // Calculate the scroll position to put the message at the top with some padding
+      const paddingTop = 20 // pixels from top for visual spacing
+      const targetScrollTop = scrollContainer.scrollTop + messageRect.top - containerRect.top - paddingTop
+
+      console.log('[SCROLL] Scrolling to position:', targetScrollTop, {
+        currentScrollTop: scrollContainer.scrollTop,
+        messageTop: messageRect.top,
+        containerTop: containerRect.top,
+        containerHeight: containerRect.height
+      })
+
+      // Smooth scroll to the calculated position
+      scrollContainer.scrollTo({
+        top: targetScrollTop,
+        behavior: 'smooth'
+      })
+    })
+  }, [])
+
+  // Scroll when a new user message is added
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1]
+
+      // Scroll to latest user message when the last message is from the user
+      if (lastMessage.role === 'user') {
+        console.log('[SCROLL] New user message detected, scheduling scroll...')
+
+        // Use multiple timeouts to handle different render timings
+        const timeout1 = setTimeout(scrollToLatestUserMessage, 100)
+        const timeout2 = setTimeout(scrollToLatestUserMessage, 300)
+        const timeout3 = setTimeout(scrollToLatestUserMessage, 500)
+
+        return () => {
+          clearTimeout(timeout1)
+          clearTimeout(timeout2)
+          clearTimeout(timeout3)
+        }
+      }
+    }
+  }, [messages, scrollToLatestUserMessage])
 
   const loadConversation = async (id: string) => {
     try {
@@ -106,9 +208,9 @@ export function ChatInterface({
       setConversationModel(conversation.model)
       setTotalTokensUsed(conversation.total_tokens_used || 0)
       
-      // Set the selected model to match the conversation
+      // Set reasoning mode based on conversation model
       if (conversation.model) {
-        setLastSelectedModel(conversation.model)
+        setReasoning(conversation.model === 'grok-4-fast-reasoning')
       }
     } catch (error) {
       console.error('Error loading conversation:', error)
@@ -184,46 +286,72 @@ export function ChatInterface({
     }
   }
 
-  // Scroll to user message when AI starts responding
-  const scrollToUserMessage = () => {
-    // Find the last user message element
-    const userMessages = document.querySelectorAll('[data-message-role="user"]')
-    if (userMessages.length > 0) {
-      const lastUserMessage = userMessages[userMessages.length - 1]
-      lastUserMessage.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }
-
-  // Only scroll when AI message is being added (not on every message change)
+  // Detect user scrolling
   useEffect(() => {
-    // Check if the last message is from assistant and we have at least 2 messages
-    if (messages.length >= 2) {
-      const lastMessage = messages[messages.length - 1]
-      const secondLastMessage = messages[messages.length - 2]
+    const scrollContainer = scrollContainerRef.current
+    if (!scrollContainer) return
 
-      // Scroll to user message when AI starts responding
-      if (lastMessage.role === 'assistant' && secondLastMessage.role === 'user') {
-        scrollToUserMessage()
+    const handleScroll = () => {
+      // Check if this was a user-initiated scroll
+      const currentScrollTop = scrollContainer.scrollTop
+      const scrollDelta = Math.abs(currentScrollTop - lastScrollTop.current)
+
+      // If scroll changed significantly and we're streaming, assume user scrolled
+      if (isStreaming && scrollDelta > 10) {
+        setUserHasScrolled(true)
       }
-    }
-  }, [messages.length])
 
-  const handleSendMessage = async (content: string, model: string) => {
-    console.log('Sending message with model:', model, 'Content:', content)
-
-    // Check if model changed from conversation model
-    if (conversationModel && model !== conversationModel && messages.length > 0) {
-      // Create new conversation with different model
-      await handleStartNewChat(model)
-      return
+      lastScrollTop.current = currentScrollTop
     }
+
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true })
+    return () => scrollContainer.removeEventListener('scroll', handleScroll)
+  }, [isStreaming])
+
+  // Keep user message at top during streaming (only if user hasn't scrolled)
+  useEffect(() => {
+    if (isStreaming && !userHasScrolled && scrollContainerRef.current) {
+      // During streaming, keep the user message at the top only if user hasn't scrolled
+      const scrollInterval = setInterval(() => {
+        const userMessages = document.querySelectorAll('[data-message-role="user"]')
+        if (userMessages.length > 0 && !userHasScrolled) {
+          const latestUserMessage = userMessages[userMessages.length - 1] as HTMLElement
+          if (latestUserMessage && scrollContainerRef.current) {
+            const containerRect = scrollContainerRef.current.getBoundingClientRect()
+            const messageRect = latestUserMessage.getBoundingClientRect()
+            const currentOffset = messageRect.top - containerRect.top
+
+            // Only adjust if the message has drifted from the top
+            if (Math.abs(currentOffset - 20) > 5) {
+              const targetScrollTop = scrollContainerRef.current.scrollTop + currentOffset - 20
+              lastScrollTop.current = targetScrollTop // Update our reference
+              scrollContainerRef.current.scrollTo({
+                top: targetScrollTop,
+                behavior: 'instant' // Use instant to avoid jitter
+              })
+            }
+          }
+        }
+      }, 100) // Check every 100ms
+
+      return () => clearInterval(scrollInterval)
+    }
+  }, [isStreaming, userHasScrolled])
+
+  const handleSendMessage = async (content: string, reasoningMode: boolean, webSearchMode: boolean) => {
+    // Determine model based on reasoning state
+    const model = reasoningMode ? 'grok-4-fast-reasoning' : 'grok-4-fast-non-reasoning'
+    console.log('Sending message with reasoning:', reasoningMode, 'Web search:', webSearchMode, 'Model:', model, 'Content:', content)
+
+    // Note: We allow model changes within the same conversation
+    // Users can toggle reasoning on/off without creating a new chat
     
     // Check context limit before sending
-    const modelToUse = conversationModel || model
+    // Use the current model for checking limits
     const exceedsLimit = await wouldExceedContextLimit(
       totalTokensUsed,
       content,
-      modelToUse
+      model
     )
     
     if (exceedsLimit) {
@@ -232,7 +360,8 @@ export function ChatInterface({
     }
     
     setLastUserMessage(content)
-    setLastSelectedModel(model)
+    setReasoning(reasoningMode)
+    setWebSearch(webSearchMode)
     setChatError(null)
     
     // Create conversation on first message if needed
@@ -241,6 +370,8 @@ export function ChatInterface({
       const newConvId = await createConversation(content, model)
       if (newConvId) {
         currentConversationId = newConvId
+        // Set the conversation model only when creating the conversation
+        setConversationModel(model)
       }
     }
 
@@ -250,9 +381,17 @@ export function ChatInterface({
       role: 'user',
       content,
     }
-    
+
     setMessages(prev => [...prev, userMessage])
     setIsLoading(true)
+    setWaitingForAiResponse(true) // Enable spacer for auto-scroll
+    setUserHasScrolled(false) // Reset scroll flag for new message
+
+    // Trigger immediate scroll to position the new user message at the top
+    // The spacer will ensure there's enough space to scroll to top
+    setTimeout(scrollToLatestUserMessage, 150)
+    setTimeout(scrollToLatestUserMessage, 400)
+    setTimeout(scrollToLatestUserMessage, 600)
 
     // Save user message to database with correct attachments
     if (currentConversationId) {
@@ -263,19 +402,21 @@ export function ChatInterface({
       if (onSendMessage) {
         console.log('Using custom onSendMessage handler')
         // Use custom handler if provided
-        const response = await onSendMessage(content, model)
+        const response = await onSendMessage(content, reasoningMode, webSearchMode)
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
           content: response,
-          timestamp: new Date().toLocaleTimeString('en-US', { 
-            hour: 'numeric', 
+          timestamp: new Date().toLocaleTimeString('en-US', {
+            hour: 'numeric',
             minute: '2-digit',
-            hour12: true 
+            hour12: true
           }),
           model
         }
         setMessages(prev => [...prev, aiMessage])
+        setWaitingForAiResponse(false) // AI has responded, remove spacer
+        setIsStreaming(false)
       } else {
         console.log('Using real AI streaming API')
         // Use real AI streaming
@@ -289,7 +430,8 @@ export function ChatInterface({
             messages: [...messages, userMessage].map(m => ({
               role: m.role,
               content: m.content
-            }))
+            })),
+            webSearch: webSearchMode
           })
         })
 
@@ -299,6 +441,7 @@ export function ChatInterface({
           const errorData = await response.json()
           console.error('API Error:', errorData)
           setChatError(errorData)
+          setWaitingForAiResponse(false) // Remove spacer on API error
           return
         }
 
@@ -306,9 +449,9 @@ export function ChatInterface({
         const reader = response.body?.getReader()
         const decoder = new TextDecoder()
         let aiContent = ''
-        
+
         console.log('Starting to read stream...')
-        
+
         // Add placeholder AI message
         const aiMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -316,52 +459,84 @@ export function ChatInterface({
           content: '',
           model
         }
-        
+
         // Set streaming state
         setStreamingMessageId(aiMessage.id)
         setStreamingContent('')
         setMessages(prev => [...prev, aiMessage])
-        
+        setIsStreaming(true)
+        // Keep the spacer during streaming to maintain scroll position
+
         if (reader) {
           while (true) {
             const { done, value } = await reader.read()
             if (done) {
-              console.log('Stream finished, total content:', aiContent)
-              
-              // Update the final message with complete content
-              setMessages(prev => prev.map(msg => 
-                msg.id === aiMessage.id 
-                  ? { ...msg, content: aiContent }
+              console.log('Stream finished, total content length:', aiContent.length)
+
+              // Extract sources from the stream if present
+              let sources: SearchSource[] | undefined = undefined
+              let displayContent = aiContent
+
+              const sourcesMatch = aiContent.match(/__SOURCES_START__(.+?)__SOURCES_END__/)
+              if (sourcesMatch) {
+                try {
+                  sources = JSON.parse(sourcesMatch[1])
+                  // Remove the sources marker from display content
+                  displayContent = aiContent.replace(/__SOURCES_START__.+?__SOURCES_END__/, '').trim()
+                  console.log('[CHAT] Extracted', sources?.length, 'sources from stream')
+                } catch (error) {
+                  console.error('[CHAT] Error parsing sources:', error)
+                }
+              }
+
+              // Check if web search was used
+              const webSearchUsed = webSearchMode && (sources && sources.length > 0 || /\[\d+\]|\(\d+\)|https?:\/\/[^\s]+/i.test(displayContent))
+
+              // Update the final message with complete content and sources
+              setMessages(prev => prev.map(msg =>
+                msg.id === aiMessage.id
+                  ? { ...msg, content: displayContent, webSearchUsed, sources }
                   : msg
               ))
-              
+
               // Clear streaming state
               setStreamingMessageId(null)
               setStreamingContent('')
-              
+              setIsStreaming(false)
+              setWaitingForAiResponse(false) // Remove spacer after streaming completes
+              setUserHasScrolled(false) // Reset scroll flag after streaming
+
               // Save AI message to database after streaming completes
-              if (currentConversationId && aiContent) {
+              if (currentConversationId && displayContent) {
                 await saveMessage({
                   id: aiMessage.id,
                   role: 'assistant',
-                  content: aiContent,
+                  content: displayContent,
                   model
                 }, currentConversationId)
               }
               break
             }
-            
-            // The toTextStreamResponse() returns plain text chunks
+
+            // The stream returns plain text chunks
             const chunk = decoder.decode(value, { stream: true })
             aiContent += chunk
-            
+
             // Debug: Log first chunk to check markdown presence
             if (aiContent.length <= 100) {
               console.log('[CHAT] Streaming chunk sample:', chunk)
             }
-            
+
+            // Don't show the sources marker while streaming
+            let displayContentWhileStreaming = aiContent
+            const partialSourcesMatch = aiContent.match(/__SOURCES_START__/)
+            if (partialSourcesMatch) {
+              // If we see the start of sources marker, hide it from display
+              displayContentWhileStreaming = aiContent.split('__SOURCES_START__')[0]
+            }
+
             // Update streaming content without modifying messages array
-            setStreamingContent(aiContent)
+            setStreamingContent(displayContentWhileStreaming)
           }
         }
       }
@@ -372,6 +547,7 @@ export function ChatInterface({
         message: error.message || 'Failed to send message. Please try again.',
         canRetry: true
       })
+      setWaitingForAiResponse(false) // Remove spacer on error
     } finally {
       setIsLoading(false)
     }
@@ -380,7 +556,7 @@ export function ChatInterface({
   const handleRetry = () => {
     setChatError(null)
     if (lastUserMessage) {
-      handleSendMessage(lastUserMessage, lastSelectedModel)
+      handleSendMessage(lastUserMessage, reasoning, webSearch)
     }
   }
 
@@ -396,8 +572,8 @@ export function ChatInterface({
     setMessages(filteredMessages)
     
     // Resend the last user message
-    if (lastUserMessage && lastSelectedModel) {
-      handleSendMessage(lastUserMessage, lastSelectedModel)
+    if (lastUserMessage) {
+      handleSendMessage(lastUserMessage, reasoning, webSearch)
     }
   }
 
@@ -416,12 +592,13 @@ export function ChatInterface({
     
     // Resend from the edited message
     setLastUserMessage(newContent)
-    handleSendMessage(newContent, lastSelectedModel || 'gemini-2.5-flash-lite')
+    handleSendMessage(newContent, reasoning, webSearch)
   }
 
-  const handleStartNewChat = async (modelId?: string) => {
-    const newModel = modelId || conversationModel || lastSelectedModel
-    
+  const handleStartNewChat = async (reasoningMode?: boolean, webSearchMode?: boolean, pendingMessage?: string) => {
+    const newReasoning = reasoningMode !== undefined ? reasoningMode : reasoning
+    const newWebSearch = webSearchMode !== undefined ? webSearchMode : webSearch
+
     // Clear current conversation state
     setMessages([])
     setConversationId(null)
@@ -429,31 +606,36 @@ export function ChatInterface({
     setTotalTokensUsed(0)
     setShowContextLimitDialog(false)
     setChatError(null)
-    setLastSelectedModel(newModel)
-    setLoadedConversationId(null) // Reset loaded conversation tracker
-    
-    // If we have a pending message, send it after creating new conversation
-    if (lastUserMessage && modelId) {
-      setTimeout(() => {
-        handleSendMessage(lastUserMessage, newModel)
-      }, 100)
-    }
-    
-    // Notify parent to update URL to new chat
-    if (onConversationCreated) {
-      // Use a placeholder ID to trigger navigation to /chat
-      router.push('/chat')
+    setReasoning(newReasoning)
+    setWebSearch(newWebSearch)
+    // Don't reset loadedConversationId when creating a new chat to avoid triggering reload
+
+    // Navigate to /chat for new conversation
+    router.push('/chat')
+
+    // If we have a pending message, send it after navigation
+    if (pendingMessage) {
+      // Store the pending message in state to be sent after navigation completes
+      setLastUserMessage(pendingMessage)
+      // The message will be sent when the /chat page loads with no chatId
     }
   }
 
-  const handleModelChange = (newModel: string) => {
-    setLastSelectedModel(newModel)
-    
+  const handleReasoningChange = (reasoningMode: boolean) => {
+    setReasoning(reasoningMode)
+
+    // Determine new model based on reasoning mode
+    const newModel = reasoningMode ? 'grok-4-fast-reasoning' : 'grok-4-fast-non-reasoning'
+
     // If conversation exists and model is different, this will trigger new chat
     if (conversationModel && newModel !== conversationModel && messages.length > 0) {
       // The actual new chat creation will happen when user sends a message
-      // For now, just update the selected model
+      // For now, just update the reasoning state
     }
+  }
+
+  const handleWebSearchChange = (webSearchMode: boolean) => {
+    setWebSearch(webSearchMode)
   }
 
 
@@ -523,13 +705,14 @@ export function ChatInterface({
                 </h2>
                 {/* Input with same width as chat messages */}
                 <div className="w-full flex justify-center">
-                  <ChatInput 
+                  <ChatInput
                     onSend={handleSendMessage}
                     isLoading={isLoading}
-                    selectedModelId={lastSelectedModel}
-                    onModelChange={handleModelChange}
-                    conversationModel={conversationModel}
-                    hasMessages={messages.length > 0}
+                    reasoning={reasoning}
+                    onReasoningChange={handleReasoningChange}
+                    webSearch={webSearch}
+                    onWebSearchChange={handleWebSearchChange}
+                    hasMessages={false}
                   />
                 </div>
               </div>
@@ -541,50 +724,83 @@ export function ChatInterface({
         {!isLoadingConversation && hasMessages && (
           <div className="py-4 md:py-6 pb-[180px] md:pb-[200px] bg-white">
             <div className="flex flex-col items-center px-4 md:px-6">
-              <div className="w-full max-w-3xl space-y-4">
+              <div className="w-full max-w-3xl">
                 {/* Error display */}
                 {chatError && (
-                  <ChatError
-                    message={chatError.message}
-                    code={chatError.code}
-                    canRetry={chatError.canRetry}
-                    suggestedAction={chatError.suggestedAction}
-                    onRetry={handleRetry}
-                    onChangeModel={handleChangeModel}
-                  />
-                )}
-                
-                {messages.map((message, index) => (
-                  <div key={message.id} className="w-full" data-message-role={message.role}>
-                    {message.role === 'user' ? (
-                      <MessageUser
-                        message={message.content}
-                        timestamp={message.timestamp}
-                        userInitials={userInitials}
-                        canEdit={true}
-                        onEdit={(newContent) => handleEditMessage(index, newContent)}
-                      />
-                    ) : message.role === 'assistant' ? (
-                      <MessageAI
-                        message={message.id === streamingMessageId ? streamingContent : message.content}
-                        timestamp={message.timestamp}
-                        model={message.model}
-                        isLastMessage={index === messages.length - 1}
-                        onRegenerate={handleRegenerate}
-                      />
-                    ) : null}
-                  </div>
-                ))}
-                
-                {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
-                  <div className="w-full">
-                    <MessageAI 
-                      message=""
-                      isLoading={true}
+                  <div className="mb-4">
+                    <ChatError
+                      message={chatError.message}
+                      code={chatError.code}
+                      canRetry={chatError.canRetry}
+                      suggestedAction={chatError.suggestedAction}
+                      onRetry={handleRetry}
+                      onChangeModel={handleChangeModel}
                     />
                   </div>
                 )}
+
+                {messages.map((message, index) => {
+                  const prevMessage = index > 0 ? messages[index - 1] : null
+                  const isUserAfterAI = message.role === 'user' && prevMessage?.role === 'assistant'
+                  const isAIAfterUser = message.role === 'assistant' && prevMessage?.role === 'user'
+
+                  return (
+                    <div
+                      key={message.id}
+                      className={`w-full ${
+                        isUserAfterAI ? 'mt-8' :
+                        isAIAfterUser ? 'mt-2' :
+                        index > 0 ? 'mt-4' : ''
+                      }`}
+                      data-message-role={message.role}
+                    >
+                      {message.role === 'user' ? (
+                        <MessageUser
+                          message={message.content}
+                          timestamp={message.timestamp}
+                          userInitials={userInitials}
+                          canEdit={true}
+                          onEdit={(newContent) => handleEditMessage(index, newContent)}
+                        />
+                      ) : message.role === 'assistant' ? (
+                        <div className="pl-3 pt-2">
+                          <MessageAI
+                            message={message.id === streamingMessageId ? streamingContent : message.content}
+                            timestamp={message.timestamp}
+                            model={message.model}
+                            isLastMessage={index === messages.length - 1}
+                            onRegenerate={handleRegenerate}
+                            webSearchUsed={message.webSearchUsed}
+                            sources={message.sources}
+                          />
+                        </div>
+                      ) : null}
+                    </div>
+                  )
+                })}
                 
+                {isLoading && messages[messages.length - 1]?.role !== 'assistant' && (
+                  <div className="w-full">
+                    <div className="pl-3 pt-2">
+                      <MessageAI
+                        message=""
+                        isLoading={true}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Spacer to push user message to top when waiting for AI response */}
+                {waitingForAiResponse && (
+                  <div
+                    className="w-full"
+                    style={{
+                      minHeight: '70vh', // Ensure enough space to scroll message to top
+                      transition: 'min-height 0.3s ease-out'
+                    }}
+                  />
+                )}
+
                 <div ref={messagesEndRef} />
               </div>
             </div>
@@ -600,11 +816,11 @@ export function ChatInterface({
             <ChatInput
               onSend={handleSendMessage}
               isLoading={isLoading}
-              selectedModelId={lastSelectedModel}
-              onModelChange={handleModelChange}
-              conversationModel={conversationModel}
-              hasMessages={messages.length > 0}
-              conversationId={conversationId || undefined}
+              reasoning={reasoning}
+              onReasoningChange={handleReasoningChange}
+              webSearch={webSearch}
+              onWebSearchChange={handleWebSearchChange}
+              hasMessages={true}
             />
           </div>
         </div>
@@ -613,7 +829,7 @@ export function ChatInterface({
       {/* Context Limit Dialog */}
       <ContextLimitDialog
         open={showContextLimitDialog}
-        modelId={conversationModel || lastSelectedModel}
+        modelId={conversationModel || (reasoning ? 'grok-4-fast-reasoning' : 'grok-4-fast-non-reasoning')}
         onStartNewChat={() => handleStartNewChat()}
       />
     </div>

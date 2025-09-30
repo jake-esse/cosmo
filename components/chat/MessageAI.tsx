@@ -5,8 +5,16 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
-import { VineIcon } from '@/components/icons'
-import { Copy, RefreshCw, Check } from 'lucide-react'
+import { Copy, RefreshCw, Check, Leaf, Globe } from 'lucide-react'
+import { CitationList } from './CitationList'
+import styles from './MessageAI.module.css'
+
+interface SearchSource {
+  sourceType: 'url' | 'x' | 'news' | 'rss';
+  title?: string;
+  url?: string;
+  snippet?: string;
+}
 
 interface MessageAIProps {
   message: string
@@ -15,9 +23,11 @@ interface MessageAIProps {
   model?: string
   isLastMessage?: boolean
   onRegenerate?: () => void
+  webSearchUsed?: boolean
+  sources?: SearchSource[]
 }
 
-export const MessageAI = memo(function MessageAI({ message, timestamp, isLoading, model, isLastMessage, onRegenerate }: MessageAIProps) {
+export const MessageAI = memo(function MessageAI({ message, isLoading, model, isLastMessage, onRegenerate, webSearchUsed, sources }: MessageAIProps) {
   const [copied, setCopied] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   
@@ -44,12 +54,27 @@ export const MessageAI = memo(function MessageAI({ message, timestamp, isLoading
     return (
       <div className="w-full">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-          <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-          <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-        </div>
-        <div className="flex items-center gap-4 text-xs text-slate-500">
-          <VineIcon className="w-5 h-5 text-slate-400" />
+          {/* Animated Leaf loading icon - matching static icon size */}
+          <div className="relative">
+            <svg 
+              className="w-5 h-5" 
+              xmlns="http://www.w3.org/2000/svg" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="#94a3b8"
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path 
+                className={styles.leafPulse1}
+                d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"
+              />
+              <path 
+                className={styles.leafPulse2}
+                d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"
+              />
+            </svg>
+          </div>
         </div>
       </div>
     )
@@ -81,12 +106,16 @@ export const MessageAI = memo(function MessageAI({ message, timestamp, isLoading
               </blockquote>
             ),
             a: ({href, children}) => (
-              <a href={href} target="_blank" rel="noopener noreferrer" 
-                 className="text-blue-600 hover:text-blue-800 underline">
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-mono text-[11px] bg-[#EEF4F5] text-slate-900 px-2 py-0.5 rounded-full border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-colors no-underline"
+              >
                 {children}
               </a>
             ),
-            code: ({node, inline, className, children, ...props}: any) => {
+            code: ({inline, className, children, ...props}: any) => {
               const match = /language-(\w+)/.exec(className || '')
               const language = match ? match[1] : ''
               
@@ -137,12 +166,22 @@ export const MessageAI = memo(function MessageAI({ message, timestamp, isLoading
           {message}
         </ReactMarkdown>
       </div>
-      
-      {/* Footer with vine logo and model name only - fixed height to prevent shift */}
+
+      {/* Citations */}
+      {sources && sources.length > 0 && (
+        <CitationList sources={sources} />
+      )}
+
+      {/* Footer with icons - fixed height to prevent shift */}
       <div className="flex items-center justify-between text-label-sm text-slate-500 h-8">
-        <div className="flex items-center gap-4">
-          <VineIcon className="w-5 h-5 text-slate-400" />
-          {model && <span className="text-label-sm">Model: {model}</span>}
+        <div className="flex items-center gap-3">
+          <Leaf className="w-5 h-5 text-slate-400" />
+          {webSearchUsed && (
+            <div className="flex items-center gap-1 text-slate-400">
+              <Globe className="w-4 h-4" />
+              <span className="text-xs">Web search used</span>
+            </div>
+          )}
         </div>
 
         {/* Action buttons - always render but control visibility */}

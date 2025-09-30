@@ -15,6 +15,7 @@ export interface ModelConfig {
   sort_order: number;
   remaining_today?: number;
   daily_limit?: number;
+  supports_web_search?: boolean;
 }
 
 export interface ModelUsage {
@@ -27,6 +28,8 @@ export interface ModelUsage {
   api_output_cost: number;
   user_input_cost: number;
   user_output_cost: number;
+  search_used?: boolean;
+  metadata?: any;
   created_at?: string;
 }
 
@@ -39,13 +42,22 @@ export interface StreamingOptions {
   userId: string;
   modelId: string;
   messages: ChatMessage[];
+  webSearch?: boolean;
   onTokenUsage?: (usage: TokenUsage) => void;
+  onSearchUsed?: (sources: SearchSource[]) => void;
 }
 
 export interface TokenUsage {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
+}
+
+export interface SearchSource {
+  sourceType: 'url' | 'x' | 'news' | 'rss';
+  title?: string;
+  url?: string;
+  snippet?: string;
 }
 
 export interface CostCalculation {
