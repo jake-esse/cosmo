@@ -39,7 +39,7 @@ export const MessageUser = memo(function MessageUser({ message, timestamp, userI
 
   return (
     <div
-      className="w-full bg-[#EEF4F5] text-slate-900 rounded-[30px] p-4 flex gap-3 relative group"
+      className="w-full bg-[#EEF4F5] text-slate-900 rounded-[20px] p-4 flex gap-3 relative group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

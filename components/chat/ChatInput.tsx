@@ -1,81 +1,90 @@
 'use client'
 
-import React, { useState, useRef, KeyboardEvent, useEffect, useCallback } from 'react'
-import { SendIcon, ChevronDownIcon } from '@/components/icons'
-import { ModelConfig } from '@/lib/ai/types'
-import { Badge } from '@/components/ui/badge'
-import { Sparkles, Crown, Zap } from 'lucide-react'
+import React, { useState, useRef, KeyboardEvent, useEffect } from 'react'
+import { SendIcon } from '@/components/icons'
+import { ReasoningToggle } from './ReasoningToggle'
+import { WebSearchToggle } from './WebSearchToggle'
 
 interface ChatInputProps {
-  onSend: (message: string, model: string) => void
+  onSend: (message: string, reasoning: boolean, webSearch: boolean) => void
   isLoading?: boolean
-  selectedModelId?: string
-  onModelChange?: (model: string) => void
-  conversationModel?: string | null
+  reasoning?: boolean
+  onReasoningChange?: (reasoning: boolean) => void
+  webSearch?: boolean
+  onWebSearchChange?: (webSearch: boolean) => void
   hasMessages?: boolean
 }
 
-export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelChange, conversationModel, hasMessages }: ChatInputProps) {
+export function ChatInput({
+  onSend,
+  isLoading = false,
+  reasoning = false,
+  onReasoningChange,
+  webSearch = false,
+  onWebSearchChange,
+  hasMessages = false
+}: ChatInputProps) {
   const [message, setMessage] = useState('')
-  const [models, setModels] = useState<ModelConfig[]>([])
-  const [selectedModel, setSelectedModel] = useState<string>(selectedModelId || 'gemini-2.5-flash-lite')
-  const [showModelSelector, setShowModelSelector] = useState(false)
-  const [loadingModels, setLoadingModels] = useState(true)
+  const [localReasoning, setLocalReasoning] = useState(reasoning)
+  const [localWebSearch, setLocalWebSearch] = useState(webSearch)
+  const [textareaHeight, setTextareaHeight] = useState(20)
+  const [containerHeight, setContainerHeight] = useState(134) // Default to desktop height
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // Update selected model when selectedModelId prop changes
+  // Update local states when props change
   useEffect(() => {
-    if (selectedModelId) {
-      setSelectedModel(selectedModelId)
-    }
-  }, [selectedModelId])
+    setLocalReasoning(reasoning)
+  }, [reasoning])
 
   useEffect(() => {
-    fetchModels()
-  }, [])
+    setLocalWebSearch(webSearch)
+  }, [webSearch])
 
-  // Fix initial textarea height to prevent placeholder cutoff
+  // Fix initial textarea height to prevent placeholder cutoff and calculate container height
   useEffect(() => {
     if (textareaRef.current && !message) {
       textareaRef.current.style.height = '20px'
+      setTextareaHeight(20)
     }
-  }, [])
 
-  const fetchModels = async () => {
-    try {
-      const response = await fetch('/api/chat/models')
-      const data = await response.json()
-      
-      if (data.models) {
-        setModels(data.models)
-        
-        // Set default model if current selection is not available
-        if (!data.models.find((m: ModelConfig) => m.model_id === selectedModel)) {
-          const defaultModel = data.models.find((m: ModelConfig) => m.model_id === 'gemini-2.5-flash-lite') || data.models[0]
-          if (defaultModel) {
-            setSelectedModel(defaultModel.model_id)
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching models:', error)
-    } finally {
-      setLoadingModels(false)
+    // Calculate container height based on window width (client-side only)
+    const updateContainerHeight = () => {
+      const baseHeight = window.innerWidth >= 768 ? 134 : 120
+      const extraHeight = Math.max(0, textareaHeight - 20)
+      setContainerHeight(baseHeight + extraHeight)
+    }
+
+    updateContainerHeight()
+    window.addEventListener('resize', updateContainerHeight)
+    return () => window.removeEventListener('resize', updateContainerHeight)
+  }, [textareaHeight])
+
+  const handleReasoningChange = (enabled: boolean) => {
+    setLocalReasoning(enabled)
+    if (onReasoningChange) {
+      onReasoningChange(enabled)
+    }
+  }
+
+  const handleWebSearchChange = (enabled: boolean) => {
+    setLocalWebSearch(enabled)
+    if (onWebSearchChange) {
+      onWebSearchChange(enabled)
     }
   }
 
   const handleSend = async () => {
-    if (message.trim() && !isLoading && selectedModel) {
-      onSend(message.trim(), selectedModel)
+    if (message.trim() && !isLoading) {
+      onSend(message.trim(), localReasoning, localWebSearch)
 
       // Clear state
       setMessage('')
       if (textareaRef.current) {
         textareaRef.current.style.height = '20px'
+        setTextareaHeight(20)
       }
     }
   }
-
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -86,169 +95,83 @@ export function ChatInput({ onSend, isLoading = false, selectedModelId, onModelC
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value)
-    // Auto-resize textarea
+    // Auto-resize textarea with max height of 200px
     if (textareaRef.current) {
       textareaRef.current.style.height = '20px'
       const scrollHeight = textareaRef.current.scrollHeight
-      textareaRef.current.style.height = `${Math.min(scrollHeight, 90)}px`
+      const newHeight = Math.min(scrollHeight, 200)
+      textareaRef.current.style.height = `${newHeight}px`
+      setTextareaHeight(newHeight)
     }
   }
-
-  const getTierBadge = (tier: string) => {
-    switch (tier) {
-      case 'free':
-        return (
-          <Badge variant="secondary" className="ml-1 px-1 py-0 text-[10px] h-4">
-            FREE
-          </Badge>
-        )
-      case 'plus':
-        return (
-          <Badge variant="default" className="ml-1 px-1 py-0 text-[10px] h-4 bg-blue-600">
-            PLUS
-          </Badge>
-        )
-      case 'pro':
-        return (
-          <Badge variant="default" className="ml-1 px-1 py-0 text-[10px] h-4 bg-purple-600">
-            PRO
-          </Badge>
-        )
-      default:
-        return null
-    }
-  }
-
-
-  const currentModel = models.find(m => m.model_id === selectedModel)
 
   return (
     <div className="w-full px-2 md:px-0 max-w-[803px]">
-      {/* Main input container - responsive height and border radius */}
+      {/* Main input container with dynamic height */}
       <div
-        className="relative w-full h-[120px] md:h-[134px] rounded-[25px] md:rounded-[30px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)] transition-all"
+        className="relative w-full rounded-[25px] md:rounded-[30px] shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)] transition-all duration-300"
         style={{
+          height: `${containerHeight}px`,
           backgroundColor: 'rgba(255, 255, 255, 0.4)',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          transform: 'translateZ(0)'
+          border: '1px solid rgba(128, 128, 128, 0.15)',
+          transform: 'translateZ(0)',
+          transformOrigin: hasMessages ? 'bottom center' : 'top center'
         }}
       >
-        {/* Textarea */}
-        <textarea
-        ref={textareaRef}
-        value={message}
-        onChange={handleTextareaChange}
-        onKeyDown={handleKeyDown}
-        placeholder="Type your message..."
-        className="absolute left-3 md:left-[18px] top-3 md:top-[18px] right-3 md:right-[18px] text-sm md:text-body-md text-slate-900 placeholder-slate-700 bg-transparent resize-none focus:outline-none"
-        style={{ minHeight: '20px', maxHeight: '90px', height: message ? 'auto' : '20px' }}
-        disabled={isLoading}
-      />
-      
-      {/* Bottom Row Container - Model selector and Send button */}
-      <div className="absolute bottom-3 md:bottom-[18px] left-3 md:left-[18px] right-3 md:right-[18px] flex items-center justify-end">
-        {/* Model selector and Send button on right */}
-        <div className="flex items-center gap-3">
-        {/* Model Selector */}
-        <div className="relative z-10">
-          <button
-            onClick={() => setShowModelSelector(!showModelSelector)}
-            className="flex items-center gap-1 px-2 py-1 rounded bg-white/30 hover:bg-white/50 transition-colors"
-            disabled={isLoading || loadingModels}
-          >
-            {currentModel ? (
-              <div className="flex items-center gap-1">
-                <span className="text-xs md:text-label-lg text-slate-700 hidden sm:inline">
-                  {currentModel.display_name}
-                </span>
-                <span className="text-xs md:text-label-lg text-slate-700 sm:hidden">
-                  {currentModel.display_name.split(' ')[0]}
-                </span>
-                {getTierBadge(currentModel.tier_required)}
-              </div>
-            ) : (
-              <span className="text-xs md:text-label-lg text-slate-500">
-                {loadingModels ? '...' : 'Model'}
-              </span>
-            )}
-            <ChevronDownIcon className="w-3 md:w-4 h-3 md:h-4 text-slate-600 ml-0.5 md:ml-1" strokeWidth={1} />
-          </button>
-          
-          {showModelSelector && models.length > 0 && (
-            <div
-              className="absolute bottom-full right-0 mb-2 w-64 max-w-[calc(100vw-2rem)] bg-white rounded-[20px] shadow-xl z-50 overflow-hidden border border-slate-200"
+        {/* Textarea container that grows with content */}
+        <div
+          className="absolute left-3 md:left-[18px] top-3 md:top-[18px] right-3 md:right-[18px] overflow-y-auto"
+          style={{
+            bottom: '53px', // Reduced from 60px to match top spacing better (35px button + 18px padding)
+            maxHeight: `${textareaHeight}px`
+          }}
+        >
+          <textarea
+            ref={textareaRef}
+            value={message}
+            onChange={handleTextareaChange}
+            onKeyDown={handleKeyDown}
+            placeholder="Type your message..."
+            className="w-full text-sm md:text-body-md text-slate-900 placeholder-slate-700 bg-transparent resize-none focus:outline-none"
+            style={{
+              height: `${textareaHeight}px`,
+              minHeight: '20px',
+              maxHeight: '200px'
+            }}
+            disabled={isLoading}
+          />
+        </div>
+
+        {/* Bottom Row Container - Toggles and Send button */}
+        <div className="absolute bottom-3 md:bottom-[18px] left-3 md:left-[18px] right-3 md:right-[18px] flex items-center justify-between">
+          {/* Toggles on left */}
+          <div className="flex items-center gap-2">
+            <ReasoningToggle
+              enabled={localReasoning}
+              onChange={handleReasoningChange}
+              disabled={isLoading}
+            />
+            <WebSearchToggle
+              enabled={localWebSearch}
+              onChange={handleWebSearchChange}
+              disabled={isLoading}
+            />
+          </div>
+
+          {/* Send Button on right */}
+          <div className="flex items-center">
+            <button
+              onClick={handleSend}
+              disabled={!message.trim() || isLoading}
+              className="w-[35px] h-[35px] bg-[#2A341D] backdrop-blur-sm rounded-[12px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1F2816] transition-colors"
+              aria-label="Send message"
             >
-              <div className="py-2 max-h-80 overflow-y-auto">
-              {models.map((model) => {
-                const isDisabled = model.remaining_today === 0
-                const isSelected = model.model_id === selectedModel
-                
-                return (
-                  <button
-                    key={model.model_id}
-                    onClick={() => {
-                      if (!isDisabled) {
-                        setSelectedModel(model.model_id)
-                        setShowModelSelector(false)
-                        if (onModelChange) {
-                          onModelChange(model.model_id)
-                        }
-                      }
-                    }}
-                    disabled={isDisabled}
-                    className={`w-full px-3 py-2 text-left transition-colors ${
-                      isDisabled
-                        ? 'opacity-50 cursor-not-allowed'
-                        : isSelected
-                        ? 'bg-slate-100'
-                        : 'hover:bg-slate-50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-label-md text-slate-900">
-                            {model.display_name}
-                            {hasMessages && conversationModel && model.model_id !== conversationModel && (
-                              <span className="text-slate-600 text-label-sm ml-1">(New Chat)</span>
-                            )}
-                          </span>
-                          {isSelected && <span className="text-blue-600">✓</span>}
-                        </div>
-                        <div className="text-label-sm text-slate-600 mt-1">
-                          {model.daily_limit === null ? (
-                            'Unlimited'
-                          ) : model.remaining_today === 0 ? (
-                            <span className="text-red-500">Daily limit reached</span>
-                          ) : (
-                            `${model.remaining_today}/${model.daily_limit} remaining`
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex-shrink-0 ml-2">
-                        {getTierBadge(model.tier_required)}
-                      </div>
-                    </div>
-                  </button>
-                )
-              })}
-              </div>
-            </div>
-          )}
+              <SendIcon className="w-6 h-6 text-white" />
+            </button>
+          </div>
         </div>
-        
-          {/* Send Button */}
-          <button
-            onClick={handleSend}
-            disabled={!message.trim() || isLoading || !selectedModel}
-            className="w-[35px] h-[35px] bg-[#2A341D] backdrop-blur-sm rounded-[12px] flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#1F2816] transition-colors"
-            aria-label="Send message"
-          >
-            <SendIcon className="w-6 h-6 text-white" />
-          </button>
-        </div>
-      </div>
       </div>
     </div>
   )

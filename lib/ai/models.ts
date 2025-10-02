@@ -147,30 +147,50 @@ export async function incrementDailyUsage(
 
   const today = new Date().toISOString().split('T')[0];
 
+  console.log('[DAILY_USAGE] Attempting to track usage:', {
+    userId,
+    modelId,
+    today,
+    inputTokens,
+    outputTokens
+  });
+
   // First, try to get existing usage
-  const { data: existingUsage } = await supabase
+  const { data: existingUsage, error: selectError } = await supabase
     .from('user_daily_usage')
-    .select('usage_count, input_tokens, output_tokens')
+    .select('message_count, input_tokens, output_tokens')
     .eq('user_id', userId)
     .eq('model_id', modelId)
     .eq('usage_date', today)
     .single();
+
+  if (selectError && selectError.code !== 'PGRST116') { // PGRST116 = no rows found
+    console.error('[DAILY_USAGE] Error selecting existing usage:', selectError);
+  }
 
   if (existingUsage) {
     // Update existing record
     const { error: updateError } = await supabase
       .from('user_daily_usage')
       .update({
-        usage_count: existingUsage.usage_count + 1,
-        input_tokens: existingUsage.input_tokens + inputTokens,
-        output_tokens: existingUsage.output_tokens + outputTokens,
+        message_count: (existingUsage.message_count || 0) + 1,
+        input_tokens: (existingUsage.input_tokens || 0) + inputTokens,
+        output_tokens: (existingUsage.output_tokens || 0) + outputTokens,
+        updated_at: new Date().toISOString(),
       })
       .eq('user_id', userId)
       .eq('model_id', modelId)
       .eq('usage_date', today);
 
     if (updateError) {
-      console.error('Error updating daily usage:', updateError);
+      console.error('[DAILY_USAGE] Error updating daily usage:', {
+        error: updateError,
+        userId,
+        modelId,
+        today
+      });
+    } else {
+      console.log('[DAILY_USAGE] Successfully updated existing daily usage record');
     }
   } else {
     // Insert new record
@@ -180,13 +200,20 @@ export async function incrementDailyUsage(
         user_id: userId,
         model_id: modelId,
         usage_date: today,
-        usage_count: 1,
+        message_count: 1,
         input_tokens: inputTokens,
         output_tokens: outputTokens,
       });
 
     if (insertError) {
-      console.error('Error inserting daily usage:', insertError);
+      console.error('[DAILY_USAGE] Error inserting daily usage:', {
+        error: insertError,
+        userId,
+        modelId,
+        today
+      });
+    } else {
+      console.log('[DAILY_USAGE] Successfully inserted new daily usage record');
     }
   }
 }

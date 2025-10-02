@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body
-    const { modelId, messages } = await request.json();
-    console.log('[CHAT-STREAM] Model:', modelId, 'Messages count:', messages?.length);
+    const { modelId, messages, webSearch } = await request.json();
+    console.log('[CHAT-STREAM] Model:', modelId, 'Messages count:', messages?.length, 'Web search:', webSearch);
     
 
     if (!modelId || !messages || !Array.isArray(messages)) {
@@ -71,11 +71,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Stream the chat response
-    console.log('[CHAT-STREAM] Starting stream for model:', modelId);
+    console.log('[CHAT-STREAM] Starting stream for model:', modelId, 'with web search:', webSearch);
     const response = await streamChat({
       userId: user.id,
       modelId,
       messages: messages as ChatMessage[],
+      webSearch,
     });
     
     console.log('[CHAT-STREAM] Stream response created successfully');

@@ -101,10 +101,26 @@ const config: Config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "leaf-pulse": {
+          "0%, 100%": {
+            opacity: "0",
+            strokeWidth: "0",
+            transform: "scale(0.85)",
+            transformOrigin: "center",
+          },
+          "50%": {
+            opacity: "1",
+            strokeWidth: "2",
+            transform: "scale(1)",
+            transformOrigin: "center",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "leaf-pulse-1": "leaf-pulse 1.6s ease-in-out infinite",
+        "leaf-pulse-2": "leaf-pulse 1.6s ease-in-out infinite 0.2s",
       },
     },
   },
