@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const archived = searchParams.get('archived') === 'true';
 
     // Build query
-    let query = supabase
+    const query = supabase
       .from('conversations')
       .select('*', { count: 'exact' })
       .eq('user_id', user.id)

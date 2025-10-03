@@ -2,17 +2,28 @@
 
 import { ChatInterface } from '@/components/chat/ChatInterface'
 import { PageLayout } from '@/components/layout/PageLayout'
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState, useCallback } from 'react'
+import { useParams } from 'next/navigation'
 import { useNavigation } from '@/components/layout/NavigationContext'
 
 export default function ChatDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const chatId = params.id as string
   const [userInitials, setUserInitials] = useState('JE')
   const [conversationTitle, setConversationTitle] = useState('Chat')
   const { setActiveChat } = useNavigation()
+
+  const fetchConversationTitle = useCallback(async () => {
+    try {
+      const response = await fetch(`/api/conversations/${chatId}`)
+      if (response.ok) {
+        const { conversation } = await response.json()
+        setConversationTitle(conversation.title)
+      }
+    } catch (error) {
+      console.error('Error fetching conversation:', error)
+    }
+  }, [chatId])
 
   useEffect(() => {
     // Get user initials
@@ -24,25 +35,13 @@ export default function ChatDetailPage() {
       .toUpperCase()
       .slice(0, 2)
     setUserInitials(initials)
-    
+
     // Set active chat in navigation context
     setActiveChat(chatId)
-    
+
     // Fetch conversation title
     fetchConversationTitle()
-  }, [chatId, setActiveChat])
-
-  const fetchConversationTitle = async () => {
-    try {
-      const response = await fetch(`/api/conversations/${chatId}`)
-      if (response.ok) {
-        const { conversation } = await response.json()
-        setConversationTitle(conversation.title)
-      }
-    } catch (error) {
-      console.error('Error fetching conversation:', error)
-    }
-  }
+  }, [chatId, setActiveChat, fetchConversationTitle])
 
   const handleConversationUpdated = () => {
     // This will trigger the sidebar to refresh

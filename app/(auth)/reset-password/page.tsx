@@ -26,7 +26,7 @@ export default function ResetPasswordPage() {
       } else if (result?.success) {
         setSuccess(result.message || 'Password reset link sent! Check your email.')
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setIsLoading(false)

@@ -57,7 +57,7 @@ export function ChatInput({
     updateContainerHeight()
     window.addEventListener('resize', updateContainerHeight)
     return () => window.removeEventListener('resize', updateContainerHeight)
-  }, [textareaHeight])
+  }, [textareaHeight, message])
 
   const handleReasoningChange = (enabled: boolean) => {
     setLocalReasoning(enabled)

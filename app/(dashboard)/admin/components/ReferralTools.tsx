@@ -9,7 +9,7 @@ interface ProcessingResult {
   total_processed?: number
   total_completed?: number
   total_errors?: number
-  details?: any[]
+  details?: unknown[]
   error?: string
 }
 
@@ -196,16 +196,18 @@ export default function ReferralTools() {
                       View Details ({result.details.length} items)
                     </summary>
                     <div className="mt-2 space-y-2 max-h-60 overflow-y-auto">
-                      {result.details.map((detail: any, index: number) => (
+                      {result.details.map((detail: unknown, index: number) => {
+                        const d = detail as { email?: string; status?: string; error?: string };
+                        return (
                         <div key={index} className="text-xs bg-white p-2 rounded border border-gray-200">
                           <p className="font-mono text-gray-600">
-                            {detail.email} - {detail.status}
+                            {d.email} - {d.status}
                           </p>
-                          {detail.error && (
-                            <p className="text-red-600 mt-1">{detail.error}</p>
+                          {d.error && (
+                            <p className="text-red-600 mt-1">{d.error}</p>
                           )}
                         </div>
-                      ))}
+                      )})}
                     </div>
                   </details>
                 )}
@@ -219,8 +221,8 @@ export default function ReferralTools() {
       <div className="mt-6 pt-6 border-t border-gray-200">
         <h3 className="text-sm font-medium text-gray-900 mb-2">How it works:</h3>
         <ul className="space-y-1 text-xs text-gray-600">
-          <li>• Finds all referrals with status = 'pending'</li>
-          <li>• Checks if the referred user's email is verified</li>
+          <li>• Finds all referrals with status = &apos;pending&apos;</li>
+          <li>• Checks if the referred user&apos;s email is verified</li>
           <li>• Completes the referral and awards points to both users</li>
           <li>• Logs all operations to the audit table</li>
         </ul>

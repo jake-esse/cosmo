@@ -50,7 +50,7 @@ export default function SignUpPage() {
       } else {
         router.push('/dashboard')
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setIsLoading(false)

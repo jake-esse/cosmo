@@ -55,7 +55,7 @@ export async function streamChat(options: StreamingOptions) {
   ];
 
   // Prepare provider options for web search if supported
-  const providerOptions: any = {};
+  const providerOptions: Record<string, unknown> = {};
 
   // Enable web search for xAI models that support it AND user has enabled web search
   if (modelConfig.provider === 'xai' && modelConfig.supports_web_search && webSearch) {
@@ -97,7 +97,7 @@ export async function streamChat(options: StreamingOptions) {
   const capturedSources: SearchSource[] = [];
 
   // Build the streamText configuration
-  const streamConfig: any = {
+  const streamConfig: Record<string, unknown> = {
     model,
     messages: messagesWithSystem,
     maxTokens: modelConfig.max_output_tokens,
@@ -109,13 +109,14 @@ export async function streamChat(options: StreamingOptions) {
     console.log('[STREAM] Provider options added to config:', streamConfig.providerOptions);
   }
 
-  streamConfig.onFinish = async (result: any) => {
+  streamConfig.onFinish = async (result: unknown) => {
       // Store reference to capturedSources
       // @ts-ignore
       streamConfig.onFinish.__capturedSources = capturedSources;
       console.log('[STREAM] onFinish result keys:', Object.keys(result));
 
-      const { usage, finishReason, text } = result;
+      const res = result as { usage?: unknown; finishReason?: string; text?: string; sources?: Promise<unknown[]> };
+      const { usage, finishReason, text } = res;
 
       console.log('[STREAM] Stream finished. Reason:', finishReason, 'Text length:', text?.length);
       console.log('[STREAM] First 200 chars of response:', text?.substring(0, 200));
@@ -130,7 +131,7 @@ export async function streamChat(options: StreamingOptions) {
           console.log('[STREAM] Attempting to extract sources from result...');
 
           // AI SDK provides sources via result.sources (it's a promise)
-          const rawSources = result.sources ? await result.sources : null;
+          const rawSources = res.sources ? await res.sources : null;
 
           console.log('[STREAM] Raw sources:', rawSources);
 
@@ -139,17 +140,20 @@ export async function streamChat(options: StreamingOptions) {
 
             // Transform sources into our SearchSource format and filter for URL-only sources
             searchSources = rawSources
-              .filter((source: any) => {
+              .filter((source: unknown) => {
                 // Only include URL sources, exclude X posts, RSS feeds, etc.
-                const sourceType = source.sourceType || 'url';
+                const sourceType = (source as Record<string, unknown>).sourceType || 'url';
                 return sourceType === 'url';
               })
-              .map((source: any) => ({
-                sourceType: source.sourceType || 'url',
-                url: source.url,
-                title: source.title,
-                snippet: source.snippet,
-              }))
+              .map((source: unknown) => {
+                const s = source as Record<string, unknown>;
+                return {
+                  sourceType: s.sourceType || 'url',
+                  url: s.url,
+                  title: s.title,
+                  snippet: s.snippet,
+                };
+              })
               .slice(0, 5); // Limit to 5 sources max
 
             console.log('[STREAM] 🔍 WEB SEARCH SOURCES FOUND:', searchSources.length);
@@ -179,12 +183,13 @@ export async function streamChat(options: StreamingOptions) {
       }
 
       if (usage) {
+        const usageData = usage as { promptTokens: number; completionTokens: number; totalTokens: number };
         // Calculate costs
         const costs = calculateCosts(
           {
-            promptTokens: usage.promptTokens,
-            completionTokens: usage.completionTokens,
-            totalTokens: usage.totalTokens,
+            promptTokens: usageData.promptTokens,
+            completionTokens: usageData.completionTokens,
+            totalTokens: usageData.totalTokens,
           },
           modelConfig
         );
@@ -204,16 +209,16 @@ export async function streamChat(options: StreamingOptions) {
         await incrementDailyUsage(
           userId,
           modelId,
-          usage.promptTokens,
-          usage.completionTokens
+          usageData.promptTokens,
+          usageData.completionTokens
         );
 
         // Call optional callback
         if (options.onTokenUsage) {
           options.onTokenUsage({
-            promptTokens: usage.promptTokens,
-            completionTokens: usage.completionTokens,
-            totalTokens: usage.totalTokens,
+            promptTokens: usageData.promptTokens,
+            completionTokens: usageData.completionTokens,
+            totalTokens: usageData.totalTokens,
           });
         }
       }
@@ -272,14 +277,21 @@ async function trackUsage({
   userId: string;
   modelId: string;
   provider: string;
-  usage: any;
-  costs: any;
+  usage: unknown;
+  costs: unknown;
   searchUsed?: boolean;
   searchSources?: SearchSource[];
 }) {
   const supabase = await createClient();
+  const usageData = usage as { promptTokens: number; completionTokens: number };
+  const costsData = costs as {
+    apiInputCost: number;
+    apiOutputCost: number;
+    userInputCost: number;
+    userOutputCost: number;
+  };
 
-  const metadata: any = {};
+  const metadata: Record<string, unknown> = {};
   if (searchUsed) {
     metadata.web_search_used = true;
     if (searchSources.length > 0) {
@@ -291,12 +303,12 @@ async function trackUsage({
     user_id: userId,
     model: modelId,
     provider,
-    input_tokens: usage.promptTokens,
-    output_tokens: usage.completionTokens,
-    api_input_cost: costs.apiInputCost,
-    api_output_cost: costs.apiOutputCost,
-    user_input_cost: costs.userInputCost,
-    user_output_cost: costs.userOutputCost,
+    input_tokens: usageData.promptTokens,
+    output_tokens: usageData.completionTokens,
+    api_input_cost: costsData.apiInputCost,
+    api_output_cost: costsData.apiOutputCost,
+    user_input_cost: costsData.userInputCost,
+    user_output_cost: costsData.userOutputCost,
     metadata,
   };
 
@@ -308,37 +320,40 @@ async function trackUsage({
   }
 }
 
-export function getErrorMessage(error: any): string {
-  if (error.code === 'RATE_LIMIT') {
+export function getErrorMessage(error: unknown): string {
+  const err = error as { code?: string; message?: string };
+
+  if (err.code === 'RATE_LIMIT') {
     return 'Rate limit exceeded. Please try a different model or wait a moment.';
   }
-  
-  if (error.code === 'INVALID_API_KEY') {
+
+  if (err.code === 'INVALID_API_KEY') {
     return 'Invalid API key. This model is temporarily unavailable.';
   }
-  
-  if (error.code === 'MODEL_NOT_FOUND') {
+
+  if (err.code === 'MODEL_NOT_FOUND') {
     return 'Model not found. Please select a different model.';
   }
-  
-  if (error.message?.includes('API key not configured')) {
-    return `${error.message}. Please select a model from a different provider.`;
+
+  if (err.message?.includes('API key not configured')) {
+    return `${err.message}. Please select a model from a different provider.`;
   }
-  
-  return error.message || 'An unexpected error occurred. Please try again.';
+
+  return err.message || 'An unexpected error occurred. Please try again.';
 }
 
-export function isRetryableError(error: any): boolean {
+export function isRetryableError(error: unknown): boolean {
+  const err = error as { code?: string; message?: string };
   const nonRetryableCodes = ['INVALID_API_KEY', 'MODEL_NOT_FOUND', 'UNAUTHORIZED'];
-  
-  if (nonRetryableCodes.includes(error.code)) {
+
+  if (err.code && nonRetryableCodes.includes(err.code)) {
     return false;
   }
-  
-  if (error.message?.includes('API key not configured')) {
+
+  if (err.message?.includes('API key not configured')) {
     return false;
   }
-  
+
   return true;
 }
 

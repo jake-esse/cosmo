@@ -44,7 +44,7 @@ function VerifyEmailContent({
           </div>
           <CardTitle className="text-center">Email Verified!</CardTitle>
           <CardDescription className="text-center">
-            Your email has been successfully verified. You've been awarded 100 equity points!
+            Your email has been successfully verified. You&apos;ve been awarded 100 equity points!
           </CardDescription>
         </CardHeader>
         <CardContent>

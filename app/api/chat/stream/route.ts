@@ -81,11 +81,12 @@ export async function POST(request: NextRequest) {
     
     console.log('[CHAT-STREAM] Stream response created successfully');
     return response;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Chat streaming error:', error);
-    
+    const err = error as { code?: string; message?: string };
+
     // Handle specific errors
-    if (error.message?.includes('API key not configured')) {
+    if (err.message?.includes('API key not configured')) {
       return NextResponse.json(
         {
           error: true,
@@ -98,12 +99,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (error.code === 'RATE_LIMIT') {
+    if (err.code === 'RATE_LIMIT') {
       return NextResponse.json(
         {
           error: true,
           message: getErrorMessage(error),
-          code: error.code,
+          code: err.code,
           canRetry: true,
           suggestedAction: 'Try a different model or wait a moment',
         },
@@ -116,7 +117,7 @@ export async function POST(request: NextRequest) {
       {
         error: true,
         message: getErrorMessage(error),
-        code: error.code || 'UNKNOWN',
+        code: err.code || 'UNKNOWN',
         canRetry: isRetryableError(error),
         suggestedAction: isRetryableError(error) 
           ? 'Retry with the same model'

@@ -1,9 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { 
-  Shield, AlertTriangle, Activity, Users, 
-  Database, Settings, CheckCircle, XCircle,
-  Clock, RefreshCw, Zap, Eye
+import {
+  Shield, AlertTriangle, Activity, Users,
+  Database
 } from 'lucide-react'
 import AdminTestPanel from '@/components/admin/AdminTestPanel'
 import AdminSecurityConfig from '@/components/admin/AdminSecurityConfig'
@@ -190,21 +189,24 @@ export default async function AdminReferralsPage() {
             </h2>
           </div>
           <div className="space-y-2">
-            {data.fraudPatterns.slice(0, 5).map((pattern: any, idx: number) => (
+            {data.fraudPatterns.slice(0, 5).map((pattern: unknown, idx: number) => {
+              const p = pattern as { suspicious_pattern?: string; user_id?: string };
+              return (
               <div key={idx} className="flex items-center justify-between bg-white rounded p-3">
                 <div>
                   <p className="text-sm font-medium text-gray-900">
-                    {pattern.suspicious_pattern}
+                    {p.suspicious_pattern}
                   </p>
                   <p className="text-xs text-gray-600">
-                    User: {pattern.user_id?.slice(0, 8)}...
+                    User: {p.user_id?.slice(0, 8)}...
                   </p>
                 </div>
                 <button className="text-xs text-red-600 hover:text-red-700 font-medium">
                   Investigate →
                 </button>
               </div>
-            ))}
+            )}
+            )}
           </div>
         </div>
       )}
@@ -259,18 +261,35 @@ export default async function AdminReferralsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {data.referrals.map((referral: any) => (
-                <tr key={referral.id} className="hover:bg-gray-50">
+              {data.referrals.map((referral: unknown) => {
+                const r = referral as {
+                  id: string;
+                  status: string;
+                  fraud_score: number;
+                  signup_ip?: string;
+                  created_at: string;
+                  referrer?: {
+                    username?: string;
+                    is_suspicious?: boolean;
+                    email_verified_at?: string;
+                  };
+                  referred?: {
+                    username?: string;
+                    email_verified_at?: string;
+                  };
+                };
+                return (
+                <tr key={r.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        {referral.referrer?.username || 'Unknown'}
+                        {r.referrer?.username || 'Unknown'}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {referral.referrer?.is_suspicious && (
+                        {r.referrer?.is_suspicious && (
                           <span className="text-red-600">⚠️ Suspicious</span>
                         )}
-                        {referral.referrer?.email_verified_at ? (
+                        {r.referrer?.email_verified_at ? (
                           <span className="text-green-600">✓ Verified</span>
                         ) : (
                           <span className="text-yellow-600">Unverified</span>
@@ -281,10 +300,10 @@ export default async function AdminReferralsPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        {referral.referred?.username || 'Unknown'}
+                        {r.referred?.username || 'Unknown'}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {referral.referred?.email_verified_at ? (
+                        {r.referred?.email_verified_at ? (
                           <span className="text-green-600">✓ Verified</span>
                         ) : (
                           <span className="text-yellow-600">Unverified</span>
@@ -294,34 +313,34 @@ export default async function AdminReferralsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                      referral.status === 'completed' 
+                      r.status === 'completed'
                         ? 'bg-green-100 text-green-800'
-                        : referral.status === 'pending'
+                        : r.status === 'pending'
                         ? 'bg-yellow-100 text-yellow-800'
                         : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {referral.status}
+                      {r.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`text-sm font-medium ${
-                      referral.fraud_score > 0.7 
+                      r.fraud_score > 0.7
                         ? 'text-red-600'
-                        : referral.fraud_score > 0.4
+                        : r.fraud_score > 0.4
                         ? 'text-yellow-600'
                         : 'text-green-600'
                     }`}>
-                      {(referral.fraud_score * 100).toFixed(0)}%
+                      {(r.fraud_score * 100).toFixed(0)}%
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <p className="text-xs font-mono text-gray-600">
-                      {referral.signup_ip || 'N/A'}
+                      {r.signup_ip || 'N/A'}
                     </p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <p className="text-xs text-gray-600">
-                      {new Date(referral.created_at).toLocaleString()}
+                      {new Date(r.created_at).toLocaleString()}
                     </p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -330,7 +349,8 @@ export default async function AdminReferralsPage() {
                     </button>
                   </td>
                 </tr>
-              ))}
+              )}
+              )}
             </tbody>
           </table>
         </div>
@@ -369,22 +389,32 @@ export default async function AdminReferralsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {data.ipTracking.map((ip: any) => (
-                <tr key={ip.id} className="hover:bg-gray-50">
+              {data.ipTracking.map((ip: unknown) => {
+                const i = ip as {
+                  id: string;
+                  ip_address: string;
+                  signup_count: number;
+                  referral_count: number;
+                  suspicious_activity_count: number;
+                  is_blocked: boolean;
+                  last_seen_at: string;
+                };
+                return (
+                <tr key={i.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <p className="text-sm font-mono text-gray-900">{ip.ip_address}</p>
+                    <p className="text-sm font-mono text-gray-900">{i.ip_address}</p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <p className="text-sm text-gray-900">{ip.signup_count}</p>
+                    <p className="text-sm text-gray-900">{i.signup_count}</p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <p className="text-sm text-gray-900">{ip.referral_count}</p>
+                    <p className="text-sm text-gray-900">{i.referral_count}</p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <p className="text-sm text-gray-900">{ip.suspicious_activity_count}</p>
+                    <p className="text-sm text-gray-900">{i.suspicious_activity_count}</p>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {ip.is_blocked ? (
+                    {i.is_blocked ? (
                       <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800">
                         Blocked
                       </span>
@@ -396,11 +426,12 @@ export default async function AdminReferralsPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <p className="text-xs text-gray-600">
-                      {new Date(ip.last_seen_at).toLocaleString()}
+                      {new Date(i.last_seen_at).toLocaleString()}
                     </p>
                   </td>
                 </tr>
-              ))}
+              )}
+              )}
             </tbody>
           </table>
         </div>

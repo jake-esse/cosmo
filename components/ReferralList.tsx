@@ -102,7 +102,7 @@ export default function ReferralList({ referrals }: ReferralListProps) {
           Share your referral code to start earning points
         </p>
         <p className="text-xs text-gray-500">
-          You'll earn 50 points for each friend who joins
+          You&apos;ll earn 50 points for each friend who joins
         </p>
       </div>
     )

@@ -79,7 +79,7 @@ export async function signUp(formData: FormData) {
   const baseUsername = emailPrefix.replace(/[^a-z0-9]/g, '_')
   
   // Ensure metadata is properly formatted with security data
-  const metadata: Record<string, any> = {
+  const metadata: Record<string, unknown> = {
     username: baseUsername, // Auto-generated from email for backwards compatibility
     user_name: baseUsername, // Redundancy for trigger
     full_name: fullName || emailPrefix,

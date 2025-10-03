@@ -1,7 +1,7 @@
 "use client"
 
 import { PageTransition } from "@/components/ui/transitions"
-import { Settings, Bell, Lock, Globe, Palette, HelpCircle } from "lucide-react"
+import { Bell, Lock, Globe, Palette } from "lucide-react"
 
 export default function SettingsPage() {
   return (

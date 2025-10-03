@@ -37,7 +37,7 @@ export default function ResetPasswordConfirmPage() {
       } else {
         router.push('/dashboard')
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred')
     } finally {
       setIsLoading(false)

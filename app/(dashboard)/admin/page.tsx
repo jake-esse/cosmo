@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { Shield, Users, Activity, Database, Settings, Wrench } from 'lucide-react'
+import { Shield, Users, Activity, Database, Settings } from 'lucide-react'
 import ReferralTools from './components/ReferralTools'
 
 async function getAdminStats() {

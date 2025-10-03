@@ -96,12 +96,17 @@ export async function PATCH(
     const { title, last_message_at, total_tokens_used, archived } = body;
 
     // Build update object
-    const updates: any = {};
+    const updates: {
+      title?: string;
+      last_message_at?: string;
+      total_tokens_used?: number;
+      archived?: boolean;
+      updated_at: string;
+    } = { updated_at: new Date().toISOString() };
     if (title !== undefined) updates.title = title;
     if (last_message_at !== undefined) updates.last_message_at = last_message_at;
     if (total_tokens_used !== undefined) updates.total_tokens_used = total_tokens_used;
     if (archived !== undefined) updates.archived = archived;
-    updates.updated_at = new Date().toISOString();
 
     // Update conversation
     const { data: conversation, error } = await supabase

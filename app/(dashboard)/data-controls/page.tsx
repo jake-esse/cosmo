@@ -21,7 +21,7 @@ export default function DataControlsPage() {
               <h2 className="text-lg font-semibold text-black mb-2">Your Privacy Matters</h2>
               <p className="text-sm text-gray-700">
                 At Cosmo, you own your data. You have complete control over what information is collected,
-                how it's used, and when it's deleted. Your conversations are encrypted and never sold to third parties.
+                how it&apos;s used, and when it&apos;s deleted. Your conversations are encrypted and never sold to third parties.
               </p>
             </div>
           </div>

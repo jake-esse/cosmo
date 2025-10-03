@@ -93,7 +93,7 @@ export default function AdminSecurityConfig({ config }: AdminSecurityConfigProps
           </h2>
         </div>
         <p className="text-sm text-gray-600 mt-1">
-          Click Edit to modify values. Set "Min Account Age" to 0 to allow immediate referrals for testing.
+          Click Edit to modify values. Set &quot;Min Account Age&quot; to 0 to allow immediate referrals for testing.
         </p>
       </div>
       

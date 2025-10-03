@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { signOut } from '@/app/(auth)/actions'
-import { Button } from '@/components/ui/button'
 import { Menu, X, User, LogOut } from 'lucide-react'
 
 interface DashboardHeaderProps {

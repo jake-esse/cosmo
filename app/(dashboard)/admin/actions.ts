@@ -137,7 +137,7 @@ export async function updateSecurityConfig(configKey: string, configValue: strin
   
   try {
     // Parse the value appropriately based on the config key
-    let parsedValue: any = configValue
+    let parsedValue: string | number | boolean = configValue
     
     // For boolean configs
     if (configKey === 'require_email_verification') {
