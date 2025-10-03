@@ -661,10 +661,10 @@ export function ChatInterface({
         className="flex-1 overflow-y-auto flex flex-col relative"
       >
         {/* Background layer with transition - Show on both mobile and desktop */}
-        <div
+        <div 
           className="absolute inset-0 transition-opacity duration-700 ease-in-out"
           style={{
-            backgroundImage: 'url(/images/hero-landscape.webp)',
+            backgroundImage: 'url(/images/hero-landscape.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',

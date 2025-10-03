@@ -9,7 +9,7 @@ export function CTASection() {
       <div className="w-full max-w-[1200px] mx-auto pb-10">
         <div className="relative w-full aspect-[1120/620] rounded-[30px] overflow-hidden">
           <Image
-            src="/images/mountain-path.png"
+            src="/images/mountain-path.webp"
             alt="Image showing a winding path going up a mountain"
             fill
             className="object-cover"

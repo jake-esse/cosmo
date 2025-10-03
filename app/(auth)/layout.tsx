@@ -42,9 +42,9 @@ export default function AuthLayout({
         {/* Right side - Feature Panel with hero background (fixed) */}
         <div className="hidden lg:block lg:flex-1 sticky top-0 h-screen">
           {/* Background Image */}
-          <div 
+          <div
             className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: "url('/images/hero-landscape.png')" }}
+            style={{ backgroundImage: "url('/images/hero-landscape.webp')" }}
           />
           {/* Dark overlay for better text readability */}
           <div className="absolute inset-0 bg-black/40" />

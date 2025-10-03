@@ -28,9 +28,9 @@ export function Hero() {
       {/* Hero Image with Overlay - Responsive */}
       <div className="absolute left-0 md:left-0 right-0 md:right-auto top-[200px] md:top-[345px] w-full md:w-[1200px] h-[250px] md:h-[362px] rounded-[20px] md:rounded-[30px] overflow-hidden mx-auto">
         {/* Background Image */}
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/images/hero-landscape.png')" }}
+          style={{ backgroundImage: "url('/images/hero-landscape.webp')" }}
         />
         
         {/* 50% Text Overlay - Responsive */}

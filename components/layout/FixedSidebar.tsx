@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import {
   PlusIcon,
   AppsIcon,
@@ -44,7 +44,6 @@ const accountMenuItems = [
 
 export function FixedSidebar({ user }: FixedSidebarProps) {
   const pathname = usePathname()
-  const router = useRouter()
   const [accountExpanded, setAccountExpanded] = useState(false)
   const { unreadCount } = useNotifications()
 
@@ -63,10 +62,10 @@ export function FixedSidebar({ user }: FixedSidebarProps) {
   return (
     <aside className="absolute left-[9px] top-[62px] bottom-[11px] w-[224px] rounded-[30px] overflow-hidden shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)] flex flex-col">
       {/* Background Image Layer */}
-      <div
+      <div 
         className="absolute inset-0 z-0"
         style={{
-          backgroundImage: 'url(/images/left-sidebar-2.webp)',
+          backgroundImage: 'url(/images/left-sidebar-2.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
@@ -85,7 +84,7 @@ export function FixedSidebar({ user }: FixedSidebarProps) {
           {/* New chat Button - Circular with glassmorphism + text */}
           <li key="new-chat-button">
             <button
-              onClick={() => router.push('/chat')}
+              onClick={() => window.location.href = '/chat'}
               className="flex items-center gap-1 w-full group"
             >
               <div

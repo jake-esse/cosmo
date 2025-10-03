@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   VineIcon,
   PlusIcon,
@@ -44,6 +44,7 @@ export function MobileSidebar({ user }: MobileSidebarProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [accountExpanded, setAccountExpanded] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
 
   const isActive = (href: string) => {
     // Only highlight Chats when on the history page specifically
@@ -101,10 +102,10 @@ export function MobileSidebar({ user }: MobileSidebarProps) {
         {/* Menu Card */}
         <aside className="absolute left-[9px] top-[62px] bottom-[11px] w-[224px] rounded-[30px] overflow-hidden shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)] flex flex-col">
           {/* Background Image Layer */}
-          <div 
+          <div
             className="absolute inset-0 z-0"
             style={{
-              backgroundImage: 'url(/images/left-sidebar-2.png)',
+              backgroundImage: 'url(/images/left-sidebar-2.webp)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat'
@@ -124,7 +125,7 @@ export function MobileSidebar({ user }: MobileSidebarProps) {
               <li key="new-chat-button">
                 <button
                   onClick={() => {
-                    window.location.href = '/chat'
+                    router.push('/chat')
                     setIsOpen(false)
                   }}
                   className="flex items-center gap-1 w-full group"

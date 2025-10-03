@@ -120,10 +120,10 @@ export function MobileMenu({ user }: MobileMenuProps) {
             <X className="w-4 h-4 text-white" />
           </button>
           {/* Background Image - Same as chat */}
-          <div 
+          <div
             className="absolute inset-0 z-0"
             style={{
-              backgroundImage: 'url(/images/hero-landscape.png)',
+              backgroundImage: 'url(/images/hero-landscape.webp)',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               backgroundRepeat: 'no-repeat'
