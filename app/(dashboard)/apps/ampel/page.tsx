@@ -7,7 +7,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { PageLayout } from "@/components/layout/PageLayout"
 import { OverviewTab } from "./components/OverviewTab"
@@ -15,7 +15,7 @@ import { EducationTab } from "./components/EducationTab"
 import { DiscussionTab } from "./components/DiscussionTab"
 import { VerificationModal } from "./components/VerificationModal"
 
-export default function AmpelOfferingPage() {
+function AmpelOfferingContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState("overview")
@@ -181,5 +181,22 @@ export default function AmpelOfferingPage() {
         onConfirm={handleVerificationComplete}
       />
     </>
+  )
+}
+
+export default function AmpelOfferingPage() {
+  return (
+    <Suspense fallback={
+      <PageLayout pageName="Ampel Offering" titleClassName="tracking-[-0.3px]">
+        <div className="h-full flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#485C11] border-r-transparent mb-4"></div>
+            <p className="text-slate-600 font-sans">Loading...</p>
+          </div>
+        </div>
+      </PageLayout>
+    }>
+      <AmpelOfferingContent />
+    </Suspense>
   )
 }
