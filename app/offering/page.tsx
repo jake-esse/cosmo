@@ -6,7 +6,7 @@
 
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
 import { OverviewTab } from "./components/OverviewTab"
 import { EducationTab } from "./components/EducationTab"
@@ -15,7 +15,7 @@ import { FloatingNav } from "@/components/landing/FloatingNav"
 import { MainNav } from "@/components/landing/MainNav"
 import Link from "next/link"
 
-export default function OfferingPage() {
+function OfferingContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState("overview")
@@ -222,5 +222,13 @@ export default function OfferingPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OfferingPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <OfferingContent />
+    </Suspense>
   )
 }
