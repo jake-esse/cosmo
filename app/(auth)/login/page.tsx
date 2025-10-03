@@ -35,13 +35,15 @@ function LoginPageContent() {
 
     try {
       const result = await signIn(formData)
-      
+
       if (result?.error) {
         setError(result.error)
-      } else {
-        router.push('/dashboard')
+      } else if (result?.success) {
+        // Successful login - redirect to chat
+        router.push('/chat')
       }
-    } catch {
+    } catch (error) {
+      console.error('Login error:', error)
       setError('An unexpected error occurred')
     } finally {
       setIsLoading(false)

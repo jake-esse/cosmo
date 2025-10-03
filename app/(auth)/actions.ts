@@ -152,7 +152,9 @@ export async function signIn(formData: FormData) {
     return { error: error.message }
   }
 
-  redirect('/chat')
+  // Return success instead of redirecting to avoid NEXT_REDIRECT error
+  // Let the client handle the redirect
+  return { success: true }
 }
 
 export async function signOut() {

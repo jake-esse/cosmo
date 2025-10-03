@@ -3,29 +3,11 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { redirect } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import { VineIcon } from '@/components/icons'
 import { NotificationProvider } from '@/components/notifications/NotificationProvider'
 import { Toaster } from '@/components/ui/sonner'
-
-// Dynamically import sidebars to avoid SSR hydration issues
-const FixedSidebar = dynamic(
-  () => import('@/components/layout/FixedSidebar').then(mod => mod.FixedSidebar),
-  { 
-    ssr: false,
-    loading: () => (
-      <aside className="absolute left-[9px] top-[62px] bottom-[11px] w-[224px] rounded-[30px] bg-gray-100 animate-pulse" />
-    )
-  }
-)
-
-const MobileMenu = dynamic(
-  () => import('@/components/layout/MobileMenu').then(mod => mod.MobileMenu),
-  { 
-    ssr: false,
-    loading: () => null
-  }
-)
+import { FixedSidebar } from '@/components/layout/FixedSidebar'
+import { MobileMenu } from '@/components/layout/MobileMenu'
 
 export default function DashboardLayout({
   children,
@@ -42,19 +24,20 @@ export default function DashboardLayout({
   useEffect(() => {
     async function loadUser() {
       const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      
+
+      // Parallelize auth check and profile fetch for better performance
+      const [{ data: { user } }, profileResult] = await Promise.all([
+        supabase.auth.getUser(),
+        supabase.from('profiles').select('display_name').single()
+      ])
+
       if (!user) {
         redirect('/login')
         return
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-      
+      const profile = profileResult.data
+
       // Get user initials from display name
       const displayName = profile?.display_name || user.email?.split('@')[0] || 'User'
       const initials = displayName
@@ -92,13 +75,9 @@ export default function DashboardLayout({
           </div>
         </div>
 
-        {/* Fixed Desktop Sidebar - Hidden on mobile, show skeleton while loading */}
+        {/* Fixed Desktop Sidebar - Hidden on mobile */}
         <div className="hidden md:block">
-          {loading || !userInfo ? (
-            <aside className="absolute left-[9px] top-[62px] bottom-[11px] w-[224px] rounded-[30px] bg-gray-100 animate-pulse" />
-          ) : (
-            <FixedSidebar user={userInfo} />
-          )}
+          {!loading && userInfo && <FixedSidebar user={userInfo} />}
         </div>
 
         {/* Mobile Menu - Visible on mobile only */}
