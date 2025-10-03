@@ -352,11 +352,11 @@ export function ChatInterface({
   const handleSendMessage = async (content: string, reasoningMode: boolean, webSearchMode: boolean) => {
     // Determine model based on reasoning state
     const model = reasoningMode ? 'grok-4-fast-reasoning' : 'grok-4-fast-non-reasoning'
-    console.log('Sending message with reasoning:', reasoningMode, 'Web search:', webSearchMode, 'Model:', model, 'Content:', content)
+    console.log('[CHAT] Sending message with reasoning:', reasoningMode, 'Web search:', webSearchMode, 'Model:', model)
 
     // Note: We allow model changes within the same conversation
     // Users can toggle reasoning on/off without creating a new chat
-    
+
     // Check context limit before sending
     // Use the current model for checking limits
     const exceedsLimit = await wouldExceedContextLimit(
@@ -364,49 +364,77 @@ export function ChatInterface({
       content,
       model
     )
-    
+
     if (exceedsLimit) {
       setShowContextLimitDialog(true)
       return
     }
-    
+
     setLastUserMessage(content)
     setReasoning(reasoningMode)
     setWebSearch(webSearchMode)
     setChatError(null)
-    
-    // Create conversation on first message if needed
-    let currentConversationId = conversationId
-    if (!currentConversationId) {
-      const newConvId = await createConversation(content, model)
-      if (newConvId) {
-        currentConversationId = newConvId
-        // Set the conversation model only when creating the conversation
-        setConversationModel(model)
-      }
-    }
 
-    // Add user message
+    // ========== OPTIMISTIC UI UPDATES (IMMEDIATE) ==========
+    // Create user message with temporary ID
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `temp-${Date.now()}`,
       role: 'user',
       content,
     }
 
+    // 1. Show user message IMMEDIATELY (before any API calls)
+    console.log('[CHAT] Adding user message to UI (optimistic)')
     setMessages(prev => [...prev, userMessage])
-    setIsLoading(true)
-    setWaitingForAiResponse(true) // Enable spacer for auto-scroll
-    setUserHasScrolled(false) // Reset scroll flag for new message
 
-    // Trigger immediate scroll to position the new user message at the top
-    // The spacer will ensure there's enough space to scroll to top
+    // 2. Show loading indicators IMMEDIATELY
+    setIsLoading(true)
+    setWaitingForAiResponse(true)
+    setUserHasScrolled(false)
+
+    // 3. Trigger immediate scroll
     setTimeout(scrollToLatestUserMessage, 150)
     setTimeout(scrollToLatestUserMessage, 400)
     setTimeout(scrollToLatestUserMessage, 600)
 
-    // Save user message to database with correct attachments
-    if (currentConversationId) {
-      await saveMessage(userMessage, currentConversationId)
+    // ========== BACKGROUND OPERATIONS (NON-BLOCKING) ==========
+    // Track conversation ID for saving messages
+    let currentConversationId = conversationId
+
+    // Handle new conversation creation asynchronously
+    if (!currentConversationId) {
+      console.log('[CHAT] Creating new conversation in background...')
+      // Don't await - let it happen in parallel with AI streaming
+      createConversation(content, model).then(newConvId => {
+        if (newConvId) {
+          console.log('[CHAT] Conversation created:', newConvId)
+          currentConversationId = newConvId
+          setConversationModel(model)
+
+          // Save user message now that we have conversation ID
+          saveMessage(userMessage, newConvId).catch(err => {
+            console.error('[CHAT] Failed to save user message:', err)
+            // Message is still visible in UI - can retry save later if needed
+          })
+        } else {
+          console.error('[CHAT] Conversation creation returned null')
+          // User message is still visible, AI can still respond
+          // Just won't be persisted to database
+        }
+      }).catch(err => {
+        console.error('[CHAT] Failed to create conversation:', err)
+        // Don't block UI - conversation will work without DB persistence
+        // User sees their message and can get AI response
+        // Could show a toast notification here if desired
+      })
+    } else {
+      // Save user message for existing conversation (non-blocking)
+      console.log('[CHAT] Saving user message to existing conversation')
+      saveMessage(userMessage, currentConversationId).catch(err => {
+        console.error('[CHAT] Failed to save user message:', err)
+        // Message is visible in UI - saving is background operation
+        // Can implement retry logic here if needed
+      })
     }
 
     try {
@@ -518,13 +546,33 @@ export function ChatInterface({
               setUserHasScrolled(false) // Reset scroll flag after streaming
 
               // Save AI message to database after streaming completes
-              if (currentConversationId && displayContent) {
-                await saveMessage({
-                  id: aiMessage.id,
-                  role: 'assistant',
-                  content: displayContent,
-                  model
-                }, currentConversationId)
+              // Wait for conversation ID to be available if it's being created
+              if (displayContent) {
+                // Poll for conversation ID (in case it's still being created)
+                const waitForConversationId = async (maxAttempts = 50) => {
+                  for (let i = 0; i < maxAttempts; i++) {
+                    if (currentConversationId) {
+                      return currentConversationId
+                    }
+                    // Wait 100ms between checks (total max wait: 5 seconds)
+                    await new Promise(resolve => setTimeout(resolve, 100))
+                  }
+                  return null
+                }
+
+                const convId = await waitForConversationId()
+                if (convId) {
+                  saveMessage({
+                    id: aiMessage.id,
+                    role: 'assistant',
+                    content: displayContent,
+                    model
+                  }, convId).catch(err => {
+                    console.error('[CHAT] Failed to save AI message:', err)
+                  })
+                } else {
+                  console.warn('[CHAT] Conversation ID not available, skipping AI message save')
+                }
               }
               break
             }
