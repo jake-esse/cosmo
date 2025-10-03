@@ -664,7 +664,7 @@ export function ChatInterface({
         <div 
           className="absolute inset-0 transition-opacity duration-700 ease-in-out"
           style={{
-            backgroundImage: 'url(/images/hero-landscape.png)',
+            backgroundImage: 'url(/images/hero-landscape.webp)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',

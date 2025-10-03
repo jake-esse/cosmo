@@ -62,10 +62,10 @@ export function FixedSidebar({ user }: FixedSidebarProps) {
   return (
     <aside className="absolute left-[9px] top-[62px] bottom-[11px] w-[224px] rounded-[30px] overflow-hidden shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)] flex flex-col">
       {/* Background Image Layer */}
-      <div 
+      <div
         className="absolute inset-0 z-0"
         style={{
-          backgroundImage: 'url(/images/left-sidebar-2.png)',
+          backgroundImage: 'url(/images/left-sidebar-2.webp)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
