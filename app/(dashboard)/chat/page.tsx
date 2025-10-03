@@ -2,11 +2,11 @@
 
 import { ChatInterface } from '@/components/chat/ChatInterface'
 import { PageLayout } from '@/components/layout/PageLayout'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useNavigation } from '@/components/layout/NavigationContext'
 import { useSearchParams } from 'next/navigation'
 
-export default function ChatPage() {
+function ChatPageContent() {
   const [userInitials, setUserInitials] = useState('JE')
   const [conversationTitle, setConversationTitle] = useState('Chat')
   const [currentChatId, setCurrentChatId] = useState<string | undefined>()
@@ -51,5 +51,22 @@ export default function ChatPage() {
         // Don't pass onSendMessage to use real AI streaming
       />
     </PageLayout>
+  )
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={
+      <PageLayout pageName="Chat">
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#485C11] border-r-transparent mb-4"></div>
+            <p className="text-slate-600 font-sans">Loading...</p>
+          </div>
+        </div>
+      </PageLayout>
+    }>
+      <ChatPageContent />
+    </Suspense>
   )
 }
