@@ -29,7 +29,7 @@ export interface ModelUsage {
   user_input_cost: number;
   user_output_cost: number;
   search_used?: boolean;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   created_at?: string;
 }
 

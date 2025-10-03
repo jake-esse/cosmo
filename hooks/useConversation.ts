@@ -83,7 +83,12 @@ export function useConversation(initialConversationId?: string): UseConversation
       setConversation(conversation);
       
       // Convert database messages to chat interface format
-      const formattedMessages: Message[] = dbMessages.map((msg: any) => ({
+      const formattedMessages: Message[] = (dbMessages as Array<{
+        id: string
+        role: 'user' | 'assistant' | 'system'
+        content: string
+        model?: string
+      }>).map((msg) => ({
         id: msg.id,
         role: msg.role,
         content: msg.content,

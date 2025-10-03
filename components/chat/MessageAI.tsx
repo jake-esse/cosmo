@@ -115,7 +115,12 @@ export const MessageAI = memo(function MessageAI({ message, isLoading, model, is
                 {children}
               </a>
             ),
-            code: ({inline, className, children, ...props}: any) => {
+            code: ({inline, className, children, ...props}: {
+              inline?: boolean
+              className?: string
+              children?: React.ReactNode
+              [key: string]: unknown
+            }) => {
               const match = /language-(\w+)/.exec(className || '')
               const language = match ? match[1] : ''
               

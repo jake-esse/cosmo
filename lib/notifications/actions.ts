@@ -94,7 +94,7 @@ export async function broadcastSystemNotice(
   content: string,
   noticeType: 'announcement' | 'regulatory_update' | 'maintenance' | 'security_alert' | 'offering_update' | 'terms_update' | 'feature_release' = 'announcement',
   priority: 'critical' | 'high' | 'normal' | 'low' = 'normal',
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 ) {
   const supabase = createClient()
 

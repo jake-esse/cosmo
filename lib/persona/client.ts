@@ -90,7 +90,7 @@ class PersonaClient {
   async createInquiry(
     templateId: string,
     referenceId: string,
-    fields?: Record<string, any>
+    fields?: Record<string, unknown>
   ): Promise<PersonaInquiry> {
     try {
       const requestBody: CreateInquiryRequest = {
@@ -214,7 +214,7 @@ class PersonaClient {
     templateId: string,
     referenceId: string,
     redirectUri?: string,
-    fields?: Record<string, any>
+    fields?: Record<string, unknown>
   ): Promise<{ inquiry: PersonaInquiry; url: string }> {
     const inquiry = await this.createInquiry(templateId, referenceId, fields)
     const oneTimeLink = await this.generateOneTimeLink(inquiry.id)
@@ -247,7 +247,7 @@ export const personaApi = {
   createInquiry: (
     templateId: string,
     referenceId: string,
-    fields?: Record<string, any>
+    fields?: Record<string, unknown>
   ) => getPersonaClient().createInquiry(templateId, referenceId, fields),
 
   generateOneTimeLink: (inquiryId: string) =>
@@ -266,7 +266,7 @@ export const personaApi = {
     templateId: string,
     referenceId: string,
     redirectUri?: string,
-    fields?: Record<string, any>
+    fields?: Record<string, unknown>
   ) =>
     getPersonaClient().createInquiryWithLink(
       templateId,

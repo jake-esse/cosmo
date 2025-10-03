@@ -8,7 +8,7 @@ import { updateSecurityConfig } from '@/app/(dashboard)/admin/actions'
 interface SecurityConfig {
   id: string
   config_key: string
-  config_value: any
+  config_value: unknown
   description: string
   active: boolean
 }
@@ -23,12 +23,12 @@ export default function AdminSecurityConfig({ config }: AdminSecurityConfigProps
   const [saving, setSaving] = useState<string | null>(null)
   const [savedMessage, setSavedMessage] = useState<string | null>(null)
   
-  const handleEdit = (key: string, currentValue: any) => {
+  const handleEdit = (key: string, currentValue: unknown) => {
     setEditing(key)
     // Handle JSONB values - could be number, boolean, or string
-    const valueStr = typeof currentValue === 'object' ? 
-      JSON.stringify(currentValue) : 
-      currentValue.toString()
+    const valueStr = typeof currentValue === 'object' && currentValue !== null ?
+      JSON.stringify(currentValue) :
+      String(currentValue)
     setValues(prev => ({ ...prev, [key]: valueStr }))
   }
   

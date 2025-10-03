@@ -5,10 +5,10 @@ import { Eye, AlertTriangle, Clock, Database } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
 interface AdminReferralMonitorProps {
-  referrals: any[]
-  attempts: any[]
-  ipTracking: any[]
-  auditLogs: any[]
+  referrals: unknown[]
+  attempts: unknown[]
+  ipTracking: unknown[]
+  auditLogs: unknown[]
 }
 
 export default function AdminReferralMonitor({
@@ -66,7 +66,15 @@ export default function AdminReferralMonitor({
               {attempts.length === 0 ? (
                 <p className="text-sm text-gray-500">No recent attempts</p>
               ) : (
-                attempts.map((attempt: any) => (
+                (attempts as Array<{
+                  id: string
+                  referrer_id: string
+                  referred_id: string
+                  ip_address: string
+                  fraud_score: number
+                  status: string
+                  created_at: string
+                }>).map((attempt) => (
                   <div
                     key={attempt.id}
                     className={`border rounded-lg p-4 ${
@@ -120,7 +128,13 @@ export default function AdminReferralMonitor({
               {auditLogs.length === 0 ? (
                 <p className="text-sm text-gray-500">No recent audit logs</p>
               ) : (
-                auditLogs.map((log: any) => (
+                (auditLogs as Array<{
+                  id: string
+                  table_name: string
+                  operation: string
+                  user_id: string
+                  created_at: string
+                }>).map((log) => (
                   <div key={log.id} className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

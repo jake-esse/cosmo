@@ -21,22 +21,22 @@ async function testOpenAI(): Promise<ProviderTestResult> {
     apiKeyFound: !!process.env.OPENAI_API_KEY,
     modelId: 'gpt-5-nano'
   }
-  
+
   try {
     const { openai } = await import('@ai-sdk/openai')
     result.importSuccess = true
-    
+
     try {
       const model = openai('gpt-5-nano')
       result.modelCreation = !!model
       result.testMessage = 'OpenAI provider initialized successfully'
-    } catch (modelError: any) {
-      result.modelError = modelError.message || 'Unknown model creation error'
+    } catch (modelError: unknown) {
+      result.modelError = modelError instanceof Error ? modelError.message : 'Unknown model creation error'
     }
-  } catch (importError: any) {
-    result.importError = importError.message || 'Unknown import error'
+  } catch (importError: unknown) {
+    result.importError = importError instanceof Error ? importError.message : 'Unknown import error'
   }
-  
+
   return result
 }
 
@@ -57,13 +57,13 @@ async function testAnthropic(): Promise<ProviderTestResult> {
       const model = anthropic('claude-3-5-haiku-latest')
       result.modelCreation = !!model
       result.testMessage = 'Anthropic provider initialized successfully'
-    } catch (modelError: any) {
-      result.modelError = modelError.message || 'Unknown model creation error'
+    } catch (modelError: unknown) {
+      result.modelError = modelError instanceof Error ? modelError.message : 'Unknown model creation error'
     }
-  } catch (importError: any) {
-    result.importError = importError.message || 'Unknown import error'
+  } catch (importError: unknown) {
+    result.importError = importError instanceof Error ? importError.message : 'Unknown import error'
   }
-  
+
   return result
 }
 
@@ -75,30 +75,37 @@ async function testGoogle(): Promise<ProviderTestResult> {
     apiKeyFound: !!process.env.GOOGLE_AI_API_KEY,
     modelId: 'gemini-2.5-flash-lite'
   }
-  
+
   try {
     const { google } = await import('@ai-sdk/google')
     result.importSuccess = true
-    
+
     try {
       const model = google('gemini-2.5-flash-lite')
       result.modelCreation = !!model
       result.testMessage = 'Google provider initialized successfully'
-    } catch (modelError: any) {
-      result.modelError = modelError.message || 'Unknown model creation error'
+    } catch (modelError: unknown) {
+      result.modelError = modelError instanceof Error ? modelError.message : 'Unknown model creation error'
     }
-  } catch (importError: any) {
-    result.importError = importError.message || 'Unknown import error'
+  } catch (importError: unknown) {
+    result.importError = importError instanceof Error ? importError.message : 'Unknown import error'
   }
   
   return result
 }
 
-async function testProviderWithKey(provider: string, apiKey: string | undefined): Promise<any> {
+async function testProviderWithKey(provider: string, apiKey: string | undefined): Promise<{
+  provider: string
+  success?: boolean
+  error?: string
+  clientCreated?: boolean
+  method?: string
+  stack?: string
+}> {
   if (!apiKey) {
     return { provider, error: 'No API key found' }
   }
-  
+
   try {
     switch (provider) {
       case 'openai':
@@ -113,7 +120,7 @@ async function testProviderWithKey(provider: string, apiKey: string | undefined)
           clientCreated: !!openaiClient,
           method: 'createOpenAI'
         }
-        
+
       case 'anthropic':
         const { createAnthropic } = await import('@ai-sdk/anthropic')
         const anthropicClient = createAnthropic({
@@ -125,7 +132,7 @@ async function testProviderWithKey(provider: string, apiKey: string | undefined)
           clientCreated: !!anthropicClient,
           method: 'createAnthropic'
         }
-        
+
       case 'google':
         const { createGoogleGenerativeAI } = await import('@ai-sdk/google')
         const googleClient = createGoogleGenerativeAI({
@@ -137,16 +144,16 @@ async function testProviderWithKey(provider: string, apiKey: string | undefined)
           clientCreated: !!googleClient,
           method: 'createGoogleGenerativeAI'
         }
-        
+
       default:
         return { provider, error: 'Unknown provider' }
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       provider,
       success: false,
-      error: error.message || 'Unknown error',
-      stack: error.stack
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     }
   }
 }
@@ -169,9 +176,10 @@ export async function GET(request: NextRequest) {
   ])
   
   // Check package.json dependencies
-  let dependencies: any = {}
+  let dependencies: Record<string, string> = {}
   try {
-    const packageJson = require('../../../package.json')
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const packageJson = require('../../../package.json') as { dependencies: Record<string, string> }
     dependencies = {
       '@ai-sdk/anthropic': packageJson.dependencies['@ai-sdk/anthropic'] || 'not found',
       '@ai-sdk/openai': packageJson.dependencies['@ai-sdk/openai'] || 'not found',

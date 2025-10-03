@@ -17,7 +17,12 @@ interface AdminTestPanelProps {
 
 export default function AdminTestPanel({ userId }: AdminTestPanelProps) {
   const [testing, setTesting] = useState<string | null>(null)
-  const [results, setResults] = useState<any>({})
+  const [results, setResults] = useState<Record<string, {
+    success?: boolean
+    error?: string
+    data?: unknown
+    [key: string]: unknown
+  }>>({})
   
   const handleCompleteReferral = async () => {
     setTesting('complete')
@@ -157,7 +162,7 @@ export default function AdminTestPanel({ userId }: AdminTestPanelProps) {
         <div className="border-t border-gray-200 pt-4 mt-4">
           <h3 className="text-sm font-medium text-gray-900 mb-2">Test Results</h3>
           <div className="space-y-2">
-            {Object.entries(results).map(([key, result]: [string, any]) => (
+            {Object.entries(results).map(([key, result]) => (
               <div key={key} className="bg-gray-50 rounded p-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">

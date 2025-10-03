@@ -150,9 +150,13 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
             refreshCount()
 
             // Show toast for high priority notifications
-            const notification = payload.new as any
+            const notification = payload.new as {
+              priority?: string
+              title?: string
+              content?: string
+            }
             if (notification.priority === 'critical' || notification.priority === 'high') {
-              toast(notification.title, {
+              toast(notification.title || 'Notification', {
                 description: notification.content,
               })
             }

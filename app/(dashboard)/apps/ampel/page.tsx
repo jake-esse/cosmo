@@ -134,7 +134,7 @@ export default function AmpelOfferingPage() {
                 </p>
 
                 <p>
-                  This website, which we refer to as the "Site," is used by two different companies: Loupt Portal LLC and Loupt Offerings LLC.
+                  This website, which we refer to as the &quot;Site,&quot; is used by two different companies: Loupt Portal LLC and Loupt Offerings LLC.
                 </p>
 
                 <p>
@@ -142,7 +142,7 @@ export default function AmpelOfferingPage() {
                 </p>
 
                 <p>
-                  Loupt Portal LLC is a "funding portal" as defined in section 3(a)(80) of the Securities Exchange Act of 1934. Here, you can review investment opportunities of companies offering securities under section 4(a)(6) of the Securities Act of 1933, also known as Regulation Crowdfunding or Reg CF. These investments are offered to everyone, not just to accredited investors.
+                  Loupt Portal LLC is a &quot;funding portal&quot; as defined in section 3(a)(80) of the Securities Exchange Act of 1934. Here, you can review investment opportunities of companies offering securities under section 4(a)(6) of the Securities Act of 1933, also known as Regulation Crowdfunding or Reg CF. These investments are offered to everyone, not just to accredited investors.
                 </p>
 
                 <p>

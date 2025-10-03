@@ -13,7 +13,7 @@ interface ProviderDebugInfo {
   keyLength: number
   isPlaceholder: boolean
   isAvailable: boolean
-  runtimeCheck?: any
+  runtimeCheck?: unknown
 }
 
 function checkProvider(name: string, envVarName: string): ProviderDebugInfo {
@@ -64,10 +64,13 @@ export async function GET(request: NextRequest) {
   )
   
   // Check runtime environment
+  const globalThisUnknown = globalThis as unknown as { EdgeRuntime?: unknown }
+  const globalUnknown = global as unknown as { process?: { env?: Record<string, string> } }
+
   const runtimeInfo = {
     nodeVersion: process.version,
-    runtime: (globalThis as any).EdgeRuntime ? 'edge' : 'nodejs',
-    hasEdgeRuntime: !!(globalThis as any).EdgeRuntime,
+    runtime: globalThisUnknown.EdgeRuntime ? 'edge' : 'nodejs',
+    hasEdgeRuntime: !!globalThisUnknown.EdgeRuntime,
     platform: process.platform,
     env: process.env.NODE_ENV,
     envVarCount: allEnvVars.length,
@@ -78,22 +81,22 @@ export async function GET(request: NextRequest) {
       preview: process.env[key] ? `${process.env[key]!.substring(0, 10)}...` : 'undefined'
     }))
   }
-  
+
   // Test dynamic provider availability (simulating what happens in the app)
   const dynamicTests = {
     openai: {
       usingProcess: !!process.env.OPENAI_API_KEY,
-      usingGlobal: !!(global as any).process?.env?.OPENAI_API_KEY,
+      usingGlobal: !!globalUnknown.process?.env?.OPENAI_API_KEY,
       usingImport: false // Will test import.meta.env if needed
     },
     anthropic: {
       usingProcess: !!process.env.ANTHROPIC_API_KEY,
-      usingGlobal: !!(global as any).process?.env?.ANTHROPIC_API_KEY,
+      usingGlobal: !!globalUnknown.process?.env?.ANTHROPIC_API_KEY,
       usingImport: false
     },
     google: {
       usingProcess: !!process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-      usingGlobal: !!(global as any).process?.env?.GOOGLE_GENERATIVE_AI_API_KEY,
+      usingGlobal: !!globalUnknown.process?.env?.GOOGLE_GENERATIVE_AI_API_KEY,
       usingImport: false
     }
   }

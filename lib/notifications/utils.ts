@@ -48,8 +48,8 @@ export function formatNotificationDate(date: string | Date): string {
   }
 }
 
-export function groupNotificationsByDate(notifications: any[]): Record<string, any[]> {
-  const groups: Record<string, any[]> = {}
+export function groupNotificationsByDate(notifications: Array<{ created_at: string }>): Record<string, Array<{ created_at: string }>> {
+  const groups: Record<string, Array<{ created_at: string }>> = {}
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
@@ -78,7 +78,13 @@ export function groupNotificationsByDate(notifications: any[]): Record<string, a
   return groups
 }
 
-export function sortNotificationsByPriority(notifications: any[]): any[] {
+export function sortNotificationsByPriority(notifications: Array<{
+  priority: string
+  created_at: string
+}>): Array<{
+  priority: string
+  created_at: string
+}> {
   const priorityOrder = { critical: 0, high: 1, normal: 2, low: 3 }
 
   return notifications.sort((a, b) => {

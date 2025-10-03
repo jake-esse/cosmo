@@ -47,7 +47,7 @@ export function ChatError({
   };
 
   return (
-    <Alert variant={getErrorVariant() as any} className="mb-4">
+    <Alert variant={getErrorVariant() as "default" | "destructive"} className="mb-4">
       <AlertCircle className="h-4 w-4" />
       <AlertTitle>{getErrorTitle()}</AlertTitle>
       <AlertDescription className="space-y-3">

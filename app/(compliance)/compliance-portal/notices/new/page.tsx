@@ -143,9 +143,9 @@ export default function CreateNoticePage() {
       }
 
       router.push('/compliance-portal/notices')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error creating notice:', error)
-      toast.error(error.message || 'Failed to create notice')
+      toast.error(error instanceof Error ? error.message : 'Failed to create notice')
     } finally {
       setLoading(false)
     }

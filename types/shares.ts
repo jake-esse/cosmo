@@ -12,7 +12,7 @@ export interface App {
   slug: string
   icon_url?: string
   equity_pool_size: number
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   created_at: string
 }
 
@@ -30,7 +30,7 @@ export interface EquityTransaction {
   amount: number
   balance_after: number
   description?: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   created_at: string
 }
 

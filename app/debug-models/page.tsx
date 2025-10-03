@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react"
 
 interface DebugInfo {
-  providers?: any
-  models?: any
-  providerInit?: any
+  providers?: unknown
+  models?: unknown
+  providerInit?: unknown
   error?: string
   loading: boolean
 }
@@ -43,9 +43,9 @@ export default function DebugModelsPage() {
         models,
         loading: false
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       setDebugInfo({
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         loading: false
       })
     }
@@ -84,22 +84,22 @@ export default function DebugModelsPage() {
             <div className="p-4 bg-gray-50 rounded">
               <h3 className="font-medium text-gray-600 mb-2">Available Providers</h3>
               <div className="space-y-1">
-                {debugInfo.providers?.summary?.availableProviders?.map((p: string) => (
+                {((debugInfo.providers as { summary?: { availableProviders?: string[] } })?.summary?.availableProviders || []).map((p: string) => (
                   <div key={p} className="text-green-600">✅ {p}</div>
                 ))}
-                {debugInfo.providers?.summary?.unavailableProviders?.map((p: string) => (
+                {((debugInfo.providers as { summary?: { unavailableProviders?: string[] } })?.summary?.unavailableProviders || []).map((p: string) => (
                   <div key={p} className="text-red-600">❌ {p}</div>
                 ))}
               </div>
             </div>
-            
+
             <div className="p-4 bg-gray-50 rounded">
               <h3 className="font-medium text-gray-600 mb-2">Working Providers (Init Test)</h3>
               <div className="space-y-1">
-                {debugInfo.providerInit?.summary?.workingProviders?.map((p: string) => (
+                {((debugInfo.providerInit as { summary?: { workingProviders?: string[] } })?.summary?.workingProviders || []).map((p: string) => (
                   <div key={p} className="text-green-600">✅ {p}</div>
                 ))}
-                {debugInfo.providerInit?.summary?.failedProviders?.map((p: string) => (
+                {((debugInfo.providerInit as { summary?: { failedProviders?: string[] } })?.summary?.failedProviders || []).map((p: string) => (
                   <div key={p} className="text-red-600">❌ {p}</div>
                 ))}
               </div>
@@ -108,8 +108,8 @@ export default function DebugModelsPage() {
             <div className="p-4 bg-gray-50 rounded">
               <h3 className="font-medium text-gray-600 mb-2">Models API</h3>
               <div className="text-sm">
-                <div>Total Models: {debugInfo.models?.models?.length || 0}</div>
-                <div>Providers: {[...new Set(debugInfo.models?.models?.map((m: any) => m.provider) || [])].join(', ')}</div>
+                <div>Total Models: {(debugInfo.models as { models?: unknown[] })?.models?.length || 0}</div>
+                <div>Providers: {[...new Set((debugInfo.models as { models?: Array<{ provider: string }> })?.models?.map((m) => m.provider) || [])].join(', ')}</div>
               </div>
             </div>
           </div>
@@ -119,7 +119,18 @@ export default function DebugModelsPage() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Environment Variable Access</h2>
           <div className="space-y-4">
-            {debugInfo.providers?.providers?.map((p: any) => (
+            {((debugInfo.providers as { providers?: Array<{
+              name: string
+              envVarName: string
+              keyExists: boolean
+              keyLength: number
+              isPlaceholder: boolean
+              directAccess: boolean
+              dynamicAccess: boolean
+              isAvailable: boolean
+              directValue?: string
+              description?: string
+            }> })?.providers || []).map((p) => (
               <div key={p.name} className="border-l-4 border-gray-300 pl-4">
                 <h3 className="font-medium text-lg">{p.name.toUpperCase()}</h3>
                 <div className="grid grid-cols-2 gap-2 text-sm mt-2">
@@ -147,7 +158,16 @@ export default function DebugModelsPage() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Provider Initialization Tests</h2>
           <div className="space-y-4">
-            {debugInfo.providerInit?.basicTests?.map((test: any) => (
+            {((debugInfo.providerInit as { basicTests?: Array<{
+              provider: string
+              importSuccess: boolean
+              modelCreation: boolean
+              apiKeyFound: boolean
+              modelId: string
+              importError?: string
+              modelError?: string
+              testMessage?: string
+            }> })?.basicTests || []).map((test) => (
               <div key={test.provider} className="border-l-4 border-gray-300 pl-4">
                 <h3 className="font-medium text-lg">{test.provider.toUpperCase()}</h3>
                 <div className="grid grid-cols-2 gap-2 text-sm mt-2">
@@ -173,7 +193,12 @@ export default function DebugModelsPage() {
         {/* Available Models from API */}
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Models from /api/models</h2>
-          {debugInfo.models?.models ? (
+          {(debugInfo.models as { models?: Array<{
+            provider: string
+            id: string
+            name: string
+            available: boolean
+          }> })?.models ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -185,7 +210,12 @@ export default function DebugModelsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {debugInfo.models.models.map((model: any) => (
+                  {((debugInfo.models as { models: Array<{
+                    provider: string
+                    id: string
+                    name: string
+                    available: boolean
+                  }> }).models).map((model) => (
                     <tr key={`${model.provider}-${model.id}`} className="border-b">
                       <td className="p-2">{model.provider}</td>
                       <td className="p-2"><code className="bg-gray-100 px-1">{model.id}</code></td>
@@ -205,19 +235,29 @@ export default function DebugModelsPage() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Runtime Information</h2>
           <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>Runtime: {debugInfo.providers?.runtimeInfo?.runtime}</div>
-            <div>Node Version: {debugInfo.providers?.runtimeInfo?.nodeVersion}</div>
-            <div>Platform: {debugInfo.providers?.runtimeInfo?.platform}</div>
-            <div>Environment: {debugInfo.providers?.runtimeInfo?.env}</div>
-            <div>Total Env Vars: {debugInfo.providers?.runtimeInfo?.envVarCount}</div>
-            <div>AI-Related Env Vars: {debugInfo.providers?.runtimeInfo?.relevantEnvVars?.length}</div>
+            <div>Runtime: {(debugInfo.providers as { runtimeInfo?: { runtime: string } })?.runtimeInfo?.runtime}</div>
+            <div>Node Version: {(debugInfo.providers as { runtimeInfo?: { nodeVersion: string } })?.runtimeInfo?.nodeVersion}</div>
+            <div>Platform: {(debugInfo.providers as { runtimeInfo?: { platform: string } })?.runtimeInfo?.platform}</div>
+            <div>Environment: {(debugInfo.providers as { runtimeInfo?: { env: string } })?.runtimeInfo?.env}</div>
+            <div>Total Env Vars: {(debugInfo.providers as { runtimeInfo?: { envVarCount: number } })?.runtimeInfo?.envVarCount}</div>
+            <div>AI-Related Env Vars: {(debugInfo.providers as { runtimeInfo?: { relevantEnvVars: unknown[] } })?.runtimeInfo?.relevantEnvVars?.length}</div>
           </div>
-          
-          {debugInfo.providers?.runtimeInfo?.relevantEnvVars && (
+
+          {(debugInfo.providers as { runtimeInfo?: { relevantEnvVars?: Array<{
+            key: string
+            exists: boolean
+            length: number
+            preview?: string
+          }> } })?.runtimeInfo?.relevantEnvVars && (
             <div className="mt-4">
               <h3 className="font-medium mb-2">AI-Related Environment Variables:</h3>
               <div className="space-y-1">
-                {debugInfo.providers.runtimeInfo.relevantEnvVars.map((envVar: any) => (
+                {((debugInfo.providers as { runtimeInfo: { relevantEnvVars: Array<{
+                  key: string
+                  exists: boolean
+                  length: number
+                  preview?: string
+                }> } }).runtimeInfo.relevantEnvVars).map((envVar) => (
                   <div key={envVar.key} className="text-sm font-mono bg-gray-50 p-2 rounded">
                     <span className={envVar.exists ? 'text-green-600' : 'text-red-600'}>
                       {envVar.exists ? '✅' : '❌'}

@@ -111,7 +111,7 @@ export async function streamChat(options: StreamingOptions) {
 
   streamConfig.onFinish = async (result: unknown) => {
       // Store reference to capturedSources
-      // @ts-ignore
+      // @ts-expect-error - Adding custom property to function object
       streamConfig.onFinish.__capturedSources = capturedSources;
       console.log('[STREAM] onFinish result keys:', Object.keys(result));
 

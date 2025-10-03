@@ -7,9 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export default function TestBroadcastPage() {
   const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState<any[]>([])
+  const [results, setResults] = useState<unknown[]>([])
 
-  const addResult = (label: string, data: any) => {
+  const addResult = (label: string, data: unknown) => {
     setResults(prev => [...prev, { label, data, timestamp: new Date().toISOString() }])
   }
 
@@ -119,11 +119,11 @@ export default function TestBroadcastPage() {
 
       addResult('Recent User Notifications', { notifications, count: notificationCount })
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       addResult('Unexpected Error', {
         error,
-        message: error?.message,
-        stack: error?.stack
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
       })
     } finally {
       setLoading(false)

@@ -75,7 +75,7 @@ async function getAnalyticsData() {
   }
 }
 
-function processDaily(data: any[], dateField: string) {
+function processDaily(data: unknown[], dateField: string) {
   const dailyMap: Record<string, number> = {}
 
   data.forEach(item => {

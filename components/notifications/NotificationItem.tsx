@@ -12,7 +12,7 @@ export interface NotificationData {
   priority: 'critical' | 'high' | 'normal' | 'low'
   title: string
   content: string
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
   read_at?: string | null
   dismissed_at?: string | null
   created_at: string

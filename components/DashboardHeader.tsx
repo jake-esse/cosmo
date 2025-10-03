@@ -5,8 +5,15 @@ import { signOut } from '@/app/(auth)/actions'
 import { Menu, X, User, LogOut } from 'lucide-react'
 
 interface DashboardHeaderProps {
-  user: any
-  profile: any
+  user: {
+    email?: string
+    [key: string]: unknown
+  } | null
+  profile: {
+    display_name?: string
+    username?: string
+    [key: string]: unknown
+  } | null
 }
 
 export default function DashboardHeader({ user, profile }: DashboardHeaderProps) {

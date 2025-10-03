@@ -54,7 +54,7 @@ export default function CompletePage() {
           {shareCount > 0 ? (
             <>
               <p className="text-lg text-gray-600 mb-8">
-                Congratulations! You've received your first equity shares.
+                Congratulations! You&apos;ve received your first equity shares.
               </p>
 
               {/* Share Details */}

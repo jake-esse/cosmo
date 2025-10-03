@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         dateFilter = null
     }
 
-    let data: any[] = []
+    let data: unknown[] = []
     let headers: string[] = []
 
     // Query based on export type

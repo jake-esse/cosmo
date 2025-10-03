@@ -135,10 +135,10 @@ export default function DevelopersPage() {
                       </svg>
                     </div>
                     <h2 className="text-white text-4xl md:text-6xl font-brand font-normal mb-3">
-                      You're on the list!
+                      You&apos;re on the list!
                     </h2>
                     <p className="text-white/90 text-lg md:text-2xl">
-                      We'll notify you when Ampel opens for developers.
+                      We&apos;ll notify you when Ampel opens for developers.
                     </p>
                   </div>
                 )}

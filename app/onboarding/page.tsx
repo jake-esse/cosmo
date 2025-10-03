@@ -230,10 +230,10 @@ export default function OnboardingPage() {
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="font-brand text-4xl text-gray-900 mb-4">
-            Ampel's Equity Incentive Program
+            Ampel&apos;s Equity Incentive Program
           </h1>
           <p className="text-lg text-gray-600">
-            Please read all sections carefully to understand what you're receiving
+            Please read all sections carefully to understand what you&apos;re receiving
           </p>
           <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-[#DFECC6] rounded-full">
             <BookOpen className="w-4 h-4 text-[#485C11]" />
@@ -385,7 +385,7 @@ export default function OnboardingPage() {
           </div>
 
           <p className="mt-6 text-xs text-gray-500 text-center">
-            By continuing, you agree to Ampel's Terms of Service and acknowledge receipt of our Risk Disclosures.
+            By continuing, you agree to Ampel&apos;s Terms of Service and acknowledge receipt of our Risk Disclosures.
           </p>
         </div>
       </div>

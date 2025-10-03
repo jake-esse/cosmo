@@ -19,10 +19,10 @@ export type PersonaAccountType = 'individual' | 'business'
 // Base Persona Response Structure
 export interface PersonaResponse<T> {
   data: T
-  included?: any[]
+  included?: unknown[]
   meta?: {
     'one-time-link'?: string
-    [key: string]: any
+    [key: string]: unknown
   }
 }
 
@@ -33,7 +33,7 @@ export interface PersonaListResponse<T> {
     prev?: string
   }
   meta?: {
-    [key: string]: any
+    [key: string]: unknown
   }
 }
 
@@ -78,7 +78,7 @@ export interface PersonaInquiry {
     fields?: {
       [key: string]: {
         type: string
-        value: any
+        value: unknown
       }
     }
   }
@@ -112,7 +112,7 @@ export interface CreateInquiryRequest {
       'reference-id'?: string
       'account-id'?: string
       fields?: {
-        [key: string]: any
+        [key: string]: unknown
       }
       note?: string
     }
@@ -234,8 +234,8 @@ export interface PersonaWebhookEvent {
 // Webhook payload (contains the actual inquiry or account data)
 export interface PersonaWebhookPayload {
   data: PersonaInquiry | PersonaAccount
-  included?: any[]
-  meta?: Record<string, any>
+  included?: unknown[]
+  meta?: Record<string, unknown>
 }
 
 // Webhook signature header structure

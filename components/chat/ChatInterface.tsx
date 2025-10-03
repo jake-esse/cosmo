@@ -49,7 +49,13 @@ export function ChatInterface({
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingConversation, setIsLoadingConversation] = useState(!!chatId) // Start loading if we have a chatId
-  const [chatError, setChatError] = useState<any>(null)
+  const [chatError, setChatError] = useState<{
+    error: boolean
+    message: string
+    code?: string
+    canRetry: boolean
+    suggestedAction?: string
+  } | null>(null)
   const [lastUserMessage, setLastUserMessage] = useState<string>('')
   const [reasoning, setReasoning] = useState<boolean>(false)
   const [webSearch, setWebSearch] = useState<boolean>(false)
@@ -195,7 +201,12 @@ export function ChatInterface({
       console.log('[LoadConversation] Loaded messages:', dbMessages?.length, 'messages')
 
       // Convert database messages to chat interface format
-      const formattedMessages: Message[] = dbMessages.map((msg: any) => ({
+      const formattedMessages: Message[] = (dbMessages as Array<{
+        id: string
+        role: 'user' | 'assistant' | 'system'
+        content: string
+        model?: string
+      }>).map((msg) => ({
         id: msg.id,
         role: msg.role,
         content: msg.content,
@@ -540,11 +551,11 @@ export function ChatInterface({
           }
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sending message:', error)
       setChatError({
         error: true,
-        message: error.message || 'Failed to send message. Please try again.',
+        message: error instanceof Error ? error.message : 'Failed to send message. Please try again.',
         canRetry: true
       })
       setWaitingForAiResponse(false) // Remove spacer on error

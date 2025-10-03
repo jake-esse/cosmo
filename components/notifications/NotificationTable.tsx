@@ -22,7 +22,7 @@ interface NotificationData {
   read_at: string | null
   acknowledged_at?: string | null
   dismissed_at?: string | null
-  metadata?: any
+  metadata?: Record<string, unknown>
   created_at: string
   related_notice_id?: string | null
   time_group?: string
@@ -37,7 +37,7 @@ const priorityConfig = {
 
 const getNoticeTypeLabel = (notification: NotificationData) => {
   // Check metadata for the actual notice type
-  const noticeType = notification.metadata?.notice_type || notification.notification_type
+  const noticeType = (notification.metadata as { notice_type?: string } | undefined)?.notice_type || notification.notification_type
 
   const typeLabels: Record<string, { label: string; className: string }> = {
     announcement: { label: 'Announcement', className: 'bg-sky-50 text-sky-600 border border-sky-200' },
@@ -174,7 +174,7 @@ export function NotificationTable() {
       <div className="text-center py-12 font-sans">
         <Bell className="w-12 h-12 mx-auto text-slate-300 mb-3" />
         <p className="text-slate-600 font-medium">No notifications</p>
-        <p className="text-sm text-slate-400 mt-1">You're all caught up!</p>
+        <p className="text-sm text-slate-400 mt-1">You&apos;re all caught up!</p>
       </div>
     )
   }
@@ -273,11 +273,11 @@ export function NotificationTable() {
                         </div>
                         {notification.metadata && (
                           <div className="text-xs text-slate-500 space-y-1 font-sans">
-                            {notification.metadata.notice_type && (
-                              <p>Notice Type: {notification.metadata.notice_type}</p>
+                            {(notification.metadata as { notice_type?: string }).notice_type && (
+                              <p>Notice Type: {(notification.metadata as { notice_type: string }).notice_type}</p>
                             )}
-                            {notification.metadata.broadcast_time && (
-                              <p>Broadcast: {format(new Date(notification.metadata.broadcast_time), 'PPpp')}</p>
+                            {(notification.metadata as { broadcast_time?: string }).broadcast_time && (
+                              <p>Broadcast: {format(new Date((notification.metadata as { broadcast_time: string }).broadcast_time), 'PPpp')}</p>
                             )}
                           </div>
                         )}

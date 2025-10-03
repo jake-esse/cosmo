@@ -58,8 +58,8 @@ export default function ChatHistoryPage() {
       const formattedConversations = convData?.map(conv => {
         const messages = conv.messages || []
         const lastUserMessage = messages
-          .filter((m: any) => m.role === 'user')
-          .sort((a: any, b: any) => b.id.localeCompare(a.id))[0]
+          .filter((m: unknown) => (m as {role: string}).role === 'user')
+          .sort((a: unknown, b: unknown) => (b as {id: string}).id.localeCompare((a as {id: string}).id))[0]
 
         return {
           id: conv.id,
