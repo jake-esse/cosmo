@@ -1,8 +1,9 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import Image from 'next/image'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   PlusIcon,
   AppsIcon,
@@ -13,6 +14,7 @@ import {
   ChevronRightIcon,
 } from '@/components/icons'
 import { useNotifications } from '@/components/notifications/NotificationProvider'
+import { useNavigation } from './NavigationContext'
 
 interface MenuItem {
   label: string
@@ -44,8 +46,15 @@ const accountMenuItems = [
 
 export function FixedSidebar({ user }: FixedSidebarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const [accountExpanded, setAccountExpanded] = useState(false)
   const { unreadCount } = useNotifications()
+  const { setActiveChat } = useNavigation()
+
+  // Prefetch /chat route on mount for instant navigation
+  useEffect(() => {
+    router.prefetch('/chat')
+  }, [router])
 
   const isActive = (href: string) => {
     // Only highlight Chats when on the history page specifically
@@ -62,19 +71,20 @@ export function FixedSidebar({ user }: FixedSidebarProps) {
   return (
     <aside className="absolute left-[9px] top-[62px] bottom-[11px] w-[224px] rounded-[30px] overflow-hidden shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)] flex flex-col">
       {/* Background Image Layer */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: 'url(/images/left-sidebar-2.webp)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
-      />
-      
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/images/left-sidebar-2.webp"
+          alt=""
+          fill
+          priority
+          className="object-cover"
+          sizes="224px"
+        />
+      </div>
+
       {/* Glassmorphism Overlay */}
       {/* <div className="absolute inset-0 bg-white/40 backdrop-blur-[15px] z-10" /> */}
-      
+
       {/* Content Layer */}
       <div className="relative z-20 flex flex-col h-full">
       
@@ -83,8 +93,12 @@ export function FixedSidebar({ user }: FixedSidebarProps) {
         <ul className="space-y-[6px]">
           {/* New chat Button - Circular with glassmorphism + text */}
           <li key="new-chat-button">
-            <button
-              onClick={() => window.location.href = '/chat'}
+            <Link
+              href="/chat"
+              prefetch={true}
+              onClick={(e) => {
+                setActiveChat(null)
+              }}
               className="flex items-center gap-1 w-full group"
             >
               <div
@@ -99,7 +113,7 @@ export function FixedSidebar({ user }: FixedSidebarProps) {
               <span className="font-brand text-[20px] leading-[22px] font-semibold text-white">
                 New chat
               </span>
-            </button>
+            </Link>
           </li>
 
           {/* Regular menu items */}

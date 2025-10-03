@@ -4,8 +4,9 @@ import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { VineIcon } from "@/components/icons"
 import { getUserBalance } from "@/app/(auth)/actions"
-import type { 
-  AppWithShares, 
+import { PageLayout } from "@/components/layout/PageLayout"
+import type {
+  AppWithShares,
   TransactionWithApp
 } from "@/types/shares"
 
@@ -198,36 +199,20 @@ export default function SharesPage() {
 
   if (loading) {
     return (
-      <div className="relative w-full h-full bg-white">
-        <div className="absolute left-[17px] top-[9px] h-[47px] flex items-center">
-          <span className="font-brand text-[20px] leading-[22px] font-semibold text-black">
-            Shares
-          </span>
-        </div>
-        <div className="absolute left-[5px] top-[62px] right-[11px] bottom-[11px] bg-white rounded-[6px] border border-slate-100 shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)]">
-          <div className="p-8">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-48 mb-4"></div>
-              <div className="h-64 bg-gray-200 rounded"></div>
-            </div>
+      <PageLayout pageName="Shares">
+        <div className="p-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-48 mb-4"></div>
+            <div className="h-64 bg-gray-200 rounded"></div>
           </div>
         </div>
-      </div>
+      </PageLayout>
     )
   }
 
   return (
-    <div className="relative w-full h-full bg-white">
-      {/* Header - Hidden on mobile, shown on desktop */}
-      <div className="hidden md:block absolute left-[17px] top-[9px] h-[47px] z-10">
-        <span className="font-brand text-[20px] leading-[22px] font-semibold text-slate-900">
-          Shares
-        </span>
-      </div>
-
-      {/* Main Container - Full screen on mobile, card on desktop */}
-      <div className="absolute inset-0 md:inset-[5px_11px_11px_5px] md:top-[62px] bg-white md:rounded-[30px] md:border border-[#B0C4C9]/40 md:shadow-md overflow-y-auto">
-        <div className="p-4 md:p-8">
+    <PageLayout pageName="Shares">
+      <div className="p-4 md:p-8">
           
           {/* Portfolio Summary Card */}
           <div className="mb-8 bg-[#485C11] text-white rounded-[20px] md:rounded-[30px] p-6 md:p-8">
@@ -367,8 +352,7 @@ export default function SharesPage() {
               </div>
             )}
           </div>
-        </div>
       </div>
-    </div>
+    </PageLayout>
   )
 }
