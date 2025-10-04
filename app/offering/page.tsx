@@ -12,6 +12,7 @@ import { OverviewTab } from "./components/OverviewTab"
 import { EducationTab } from "./components/EducationTab"
 import { DiscussionTab } from "./components/DiscussionTab"
 import { FloatingNav } from "@/components/landing/FloatingNav"
+import { MobileNav } from "@/components/landing/MobileNav"
 import { MainNav } from "@/components/landing/MainNav"
 import Link from "next/link"
 
@@ -47,27 +48,30 @@ function OfferingContent() {
 
   return (
     <div className="bg-white min-h-screen">
+      {/* Mobile Navigation (visible on mobile only) */}
+      <MobileNav />
+
       {/* Floating Navigation */}
       <FloatingNav />
 
       {/* Main Container */}
-      <div className="relative flex flex-col items-center px-4 md:px-10">
+      <div className="relative flex flex-col items-center px-4 md:px-10 pb-5">
         {/* Main Navigation */}
         <div className="w-full max-w-[1200px] mx-auto">
           <MainNav />
         </div>
 
         {/* Hero Section with modified text */}
-        <header className="w-full max-w-[1200px] mx-auto min-h-[500px] md:h-[738px] relative overflow-clip px-4 md:px-0">
+        <header className="w-full max-w-[1200px] mx-auto min-h-[720px] md:h-[738px] relative overflow-clip px-4 md:px-0 pt-[120px] md:pt-0">
           {/* Main Headline */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-[30px] md:top-[51px] w-full md:w-[1200px] text-center">
-            <h1 className="font-brand font-normal text-5xl sm:text-6xl md:text-8xl lg:text-[160px] leading-[0.85] tracking-[-2px] md:tracking-[-8px] text-black">
+          <div className="absolute left-1/2 -translate-x-1/2 top-[120px] md:top-[51px] w-full md:w-[1200px] text-center px-4 md:px-0">
+            <h1 className="font-brand font-normal text-[60px] md:text-8xl lg:text-[160px] leading-[0.9] tracking-[-1.8px] md:tracking-[-8px] text-black">
               Your AI Company.
             </h1>
           </div>
 
           {/* Modified Subheadline with scroll button */}
-          <div className="absolute left-1/2 -translate-x-1/2 top-32 md:top-56 w-full md:w-[1060px] text-center px-4 md:px-0">
+          <div className="absolute left-1/2 -translate-x-1/2 top-[250px] md:top-56 w-full md:w-[1060px] text-center px-4 md:px-0">
             <button
               onClick={scrollToOfferingDetails}
               className="font-sans font-normal text-lg sm:text-xl md:text-[30px] leading-[1.4] tracking-[-0.15px] text-[#6F6F6F] hover:text-[#485C11] transition-colors flex items-center gap-2 mx-auto"
@@ -85,7 +89,7 @@ function OfferingContent() {
           </div>
 
           {/* Hero Image with Overlay */}
-          <div className="absolute left-0 md:left-0 right-0 md:right-auto top-[200px] md:top-[345px] w-full md:w-[1200px] h-[250px] md:h-[362px] rounded-[20px] md:rounded-[30px] overflow-hidden mx-auto">
+          <div className="absolute left-0 md:left-0 right-0 md:right-auto top-[390px] md:top-[345px] w-full md:w-[1200px] h-[310px] md:h-[362px] rounded-[20px] md:rounded-[30px] overflow-hidden mx-auto">
             {/* Background Image */}
             <div
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -100,8 +104,8 @@ function OfferingContent() {
             </div>
 
             {/* Bottom Text Overlay */}
-            <div className="absolute left-1/2 -translate-x-1/2 top-[140px] md:top-[243px] w-full md:w-[1060px] z-10 px-4 md:px-0">
-              <p className="font-sans font-normal text-base sm:text-lg md:text-[30px] leading-[1.4] tracking-[-0.15px] text-white text-center">
+            <div className="absolute left-1/2 -translate-x-1/2 top-[160px] md:top-[243px] w-full md:w-[1060px] z-10 px-4 md:px-0">
+              <p className="font-sans font-normal text-[18px] md:text-[30px] leading-[1.4] tracking-[-0.15px] text-white text-center">
                 Of Ampel&apos;s equity at launch has been allocated to user rewards.
               </p>
             </div>
@@ -113,17 +117,17 @@ function OfferingContent() {
           {/* Abundance Style Section for Current Offering Content */}
           <div className="w-full max-w-[1200px] mx-auto pb-[30px]" id="offering-details">
             <section className="flex flex-col gap-[50px] pt-20 pb-[30px] border-t-[0.5px] border-[#E9E9E9] relative">
-              {/* Regulation Badge in top right */}
-              <span className="absolute top-20 right-0 px-5 py-2 bg-[#DFECC6] text-black rounded-[1000px] font-sans text-label-md font-semibold">
+              {/* Regulation Badge - responsive positioning */}
+              <span className="self-start md:absolute md:top-20 md:right-0 px-5 py-2 bg-[#DFECC6] text-black rounded-[1000px] font-sans text-[12px] font-semibold">
                 Regulation Crowdfunding Offering
               </span>
 
               {/* Header Text */}
-              <div className="flex flex-col gap-[50px] pr-0 md:pr-[400px]">
+              <div className="flex flex-col gap-[40px] md:gap-[50px] pr-0 md:pr-[400px]">
                 <h2 className="font-mono font-normal text-[12px] tracking-[-0.12px] text-[#485C11]">
                   Offering Details
                 </h2>
-                <p className="font-brand font-normal text-[60px] leading-[0.9] tracking-[-1.8px] text-black">
+                <p className="font-brand font-normal text-[40px] md:text-[60px] leading-[0.9] tracking-[-1.2px] md:tracking-[-1.8px] text-black">
                   AI Demands a New Kind of Company.
                 </p>
                 <p className="font-sans font-normal text-[15px] leading-[1.4] tracking-[-0.075px] text-[#6F6F6F]">

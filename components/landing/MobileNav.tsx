@@ -17,9 +17,9 @@ export function MobileNav() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-[0px_2px_4px_0px_rgba(0,0,0,0.05)] rounded-bl-[20px] rounded-br-[20px] md:hidden">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/40 backdrop-blur-[15px] shadow-[0px_2px_4px_0px_rgba(0,0,0,0.05)] rounded-bl-[20px] rounded-br-[20px] md:hidden">
       {/* Top Nav Bar */}
-      <div className="flex items-start justify-between px-5 pt-5 pb-[50px]">
+      <div className="flex items-start justify-between px-5 pt-5 pb-5">
         {/* Logo */}
         <Link href="/" className="flex items-center hover:opacity-90 transition-opacity">
           <Image
@@ -51,12 +51,13 @@ export function MobileNav() {
         <div className="flex flex-col gap-[50px] px-5 pt-2 pb-8">
           {/* Menu Items */}
           <div className="flex flex-col">
-            <button
-              onClick={() => scrollToSection("offering")}
-              className="border-t border-[#E9E9E9] py-[30px] font-sans font-bold text-[14px] tracking-[-0.35px] text-black text-left"
+            <Link
+              href="/offering"
+              className="border-t border-[#E9E9E9] py-[30px] font-sans font-bold text-[14px] tracking-[-0.35px] text-black"
+              onClick={() => setIsOpen(false)}
             >
               Offering
-            </button>
+            </Link>
             <button
               onClick={() => scrollToSection("developers")}
               className="border-t border-[#E9E9E9] py-[30px] font-sans font-bold text-[14px] tracking-[-0.35px] text-black text-left"

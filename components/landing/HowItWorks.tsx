@@ -52,7 +52,7 @@ export function HowItWorks() {
       </div>
 
       {/* Right side - Green Feature Card */}
-      <div className="flex-1 relative h-[400px] md:h-[711px] max-w-full md:max-w-[590px]">
+      <div className="hidden md:flex flex-1 relative h-[400px] md:h-[711px] max-w-full md:max-w-[590px]">
         <div className="absolute inset-0 bg-[#485C11] rounded-[30px] flex items-center justify-center px-[35px]">
           <p className="font-brand font-normal text-[60px] leading-[0.9] tracking-[-1.8px] text-white text-center max-w-[521px]">
             AI is changing the world. We&apos;re making sure it benefits everyone.
