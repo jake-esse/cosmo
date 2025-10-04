@@ -78,12 +78,13 @@ export async function GET(
 
     try {
       // Create Persona inquiry and one-time link
-      const callbackUrl = `${appUrl}/api/kyc/callback?status=success`
+      // Persona will add ?inquiry-id=xxx&status=completed (or failed)
+      const redirectUri = `${appUrl}/kyc/callback`
 
       const { inquiry, url } = await personaApi.createInquiryWithLink(
         templateId,
         session.user_id, // reference-id
-        callbackUrl
+        redirectUri
       )
 
       // Update session with inquiry ID and status

@@ -86,8 +86,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Create base redirect URIs
-    const callbackBaseUrl = `${appUrl}/api/kyc/callback`
+    // Create redirect URI for Persona
+    // Persona will add ?inquiry-id=xxx&status=completed (or failed)
+    const redirectUri = `${appUrl}/kyc/callback`
 
     if (deviceType === 'desktop') {
       // Desktop flow: Create session, return token for QR code
@@ -121,8 +122,6 @@ export async function POST(req: NextRequest) {
     } else {
       // Mobile flow: Create inquiry immediately and redirect
       try {
-        const redirectUri = `${callbackBaseUrl}?status=success`
-
         const { inquiry, url } = await personaApi.createInquiryWithLink(
           templateId,
           user.id, // reference-id

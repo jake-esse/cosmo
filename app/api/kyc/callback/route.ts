@@ -14,7 +14,7 @@ import { personaApi } from '@/lib/persona/client'
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams
-    const status = searchParams.get('status')
+    const personaStatus = searchParams.get('status') // 'completed' or 'failed' from Persona
     const inquiryId = searchParams.get('inquiry-id')
     const referenceId = searchParams.get('reference-id') // This is user_id
 
@@ -46,11 +46,12 @@ export async function GET(req: NextRequest) {
       // Get account ID from inquiry relationships
       const accountId = inquiry.relationships?.account?.data?.id || null
 
-      // Determine session status based on callback status and inquiry status
+      // Determine session status based on Persona's status and inquiry status
       let sessionStatus: 'completed' | 'failed' | 'in_progress' = 'in_progress'
       let verificationStatus: 'approved' | 'declined' | 'pending' | 'needs_review' = 'pending'
 
-      if (status === 'success') {
+      // Persona sends status as 'completed' or 'failed'
+      if (personaStatus === 'completed') {
         if (inquiry.attributes.status === 'approved') {
           sessionStatus = 'completed'
           verificationStatus = 'approved'
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
           sessionStatus = 'in_progress'
           verificationStatus = 'pending'
         }
-      } else if (status === 'fail') {
+      } else if (personaStatus === 'failed') {
         sessionStatus = 'failed'
         verificationStatus = 'declined'
       }
@@ -75,7 +76,7 @@ export async function GET(req: NextRequest) {
         .from('kyc_sessions')
         .update({
           status: sessionStatus,
-          callback_status: status || 'unknown',
+          callback_status: personaStatus || 'unknown',
           completed_at: sessionStatus === 'completed' || sessionStatus === 'failed'
             ? new Date().toISOString()
             : null,
@@ -96,7 +97,7 @@ export async function GET(req: NextRequest) {
           status: verificationStatus,
           metadata: {
             inquiry_status: inquiry.attributes.status,
-            callback_status: status,
+            callback_status: personaStatus,
             completed_at: inquiry.attributes['completed-at'],
           },
         }, {
