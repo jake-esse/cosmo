@@ -12,11 +12,11 @@ export function Footer() {
   };
 
   return (
-    <footer className="w-full max-w-[1200px] mx-auto pt-10 pb-5 border-t border-[#E9E9E9]" id="developers">
-      <div className="flex flex-col gap-20">
+    <footer className="w-full max-w-[1200px] mx-auto pt-[40px] md:pt-10 pb-5 border-t border-[#E9E9E9]" id="developers">
+      <div className="flex flex-col gap-[80px] md:gap-20">
         {/* Links */}
-        <div className="flex items-center justify-between h-10">
-          <div className="flex items-center gap-[27px]">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between h-auto md:h-10 gap-[27px] md:gap-0">
+          <div className="flex flex-col md:flex-row md:items-center gap-[27px]">
             <button
               onClick={() => scrollToSection("offering")}
               className="font-sans font-bold text-[14px] tracking-[-0.35px] text-black hover:text-[#485C11] transition-colors"
@@ -45,13 +45,13 @@ export function Footer() {
         </div>
 
         {/* Credits */}
-        <div className="flex items-end gap-10">
+        <div className="flex flex-col md:flex-row md:items-end gap-[40px] md:gap-10">
           <Image
             src="/images/ampel-logo.svg"
             alt="Ampel"
             width={50}
             height={49}
-            className="h-[49px] w-[50px]"
+            className="h-[49px] w-[50px] md:h-[49px] md:w-[50px]"
           />
           <div className="flex-1 flex items-center gap-4 font-mono font-normal text-[12px] tracking-[-0.12px] text-[#485C11]">
             <span>© Ampel.</span>

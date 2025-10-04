@@ -4,7 +4,7 @@ import { ArrowUpRight } from "./icons";
 
 export function MainNav() {
   return (
-    <nav className="w-full h-[148px] relative">
+    <nav className="hidden md:block w-full h-[148px] relative">
       {/* Logo and Ampel text as clickable link - aligned with Sign Up button */}
       <Link href="/" className="absolute left-0 top-[30px] flex items-center hover:opacity-90 transition-opacity">
         <Image

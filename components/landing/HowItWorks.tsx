@@ -9,11 +9,11 @@ const steps = [
 
 export function HowItWorks() {
   return (
-    <section className="w-full max-w-[1200px] mx-auto pb-[120px] flex gap-5">
+    <section className="w-full max-w-[1200px] mx-auto pb-[80px] md:pb-[120px] flex flex-col md:flex-row gap-5">
       {/* Left side - Text and List */}
-      <div className="flex-1 flex flex-col gap-10 pt-[60px] pb-20 border-t border-[#E9E9E9]">
+      <div className="flex-1 flex flex-col gap-[40px] md:gap-10 pt-[80px] md:pt-[60px] pb-[80px] md:pb-20 border-t border-[#E9E9E9]">
         {/* Title */}
-        <div className="flex flex-col gap-10 pr-20">
+        <div className="flex flex-col gap-[40px] md:gap-10 pr-0 md:pr-20">
           <h2 className="font-brand font-normal text-[60px] leading-[0.9] tracking-[-1.8px] text-black">
             How It Works
           </h2>
@@ -28,7 +28,7 @@ export function HowItWorks() {
             <section
               key={index}
               aria-label={`Area value prop ${index + 1} of 4`}
-              className="flex gap-[30px] py-5 pr-20 border-t border-[#E9E9E9]"
+              className="flex gap-[30px] py-[20px] md:py-5 pr-0 md:pr-20 border-t border-[#E9E9E9]"
             >
               <span className="font-sans font-bold text-[15px] leading-[1.4] tracking-[-0.075px] text-[#6F6F6F]">
                 0{index + 1}
@@ -52,7 +52,7 @@ export function HowItWorks() {
       </div>
 
       {/* Right side - Green Feature Card */}
-      <div className="flex-1 relative h-[711px] max-w-[590px]">
+      <div className="flex-1 relative h-[400px] md:h-[711px] max-w-full md:max-w-[590px]">
         <div className="absolute inset-0 bg-[#485C11] rounded-[30px] flex items-center justify-center px-[35px]">
           <p className="font-brand font-normal text-[60px] leading-[0.9] tracking-[-1.8px] text-white text-center max-w-[521px]">
             AI is changing the world. We&apos;re making sure it benefits everyone.

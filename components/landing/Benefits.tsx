@@ -24,10 +24,10 @@ const benefits: BenefitCard[] = [
 
 export function Benefits() {
   return (
-    <div className="w-full max-w-[1200px] mx-auto pb-[120px]" id="offering">
-      <section className="flex flex-col gap-[50px] pt-20 pb-[60px] border-t-[0.5px] border-[#E9E9E9]">
+    <div className="w-full max-w-[1200px] mx-auto pb-[80px] md:pb-[120px]" id="offering">
+      <section className="flex flex-col gap-[50px] pt-[80px] md:pt-20 pb-[60px] border-t-[0.5px] border-[#E9E9E9]">
         {/* Header Text */}
-        <div className="flex flex-col gap-[50px] pr-[400px]">
+        <div className="flex flex-col gap-[30px] md:gap-[50px] pr-0 md:pr-[400px]">
           <h2 className="font-mono font-normal text-[12px] tracking-[-0.12px] text-[#485C11]">
             Abundance
           </h2>
@@ -40,12 +40,12 @@ export function Benefits() {
         </div>
 
         {/* Benefits Grid */}
-        <div className="flex flex-wrap gap-5 pt-10">
+        <div className="flex flex-col md:flex-row md:flex-wrap gap-5 pt-[40px] md:pt-10">
           {benefits.map((benefit, index) => (
             <section
               key={index}
               aria-label={`Area product benefit ${index + 1} of 4`}
-              className="flex-1 min-w-[265px] flex flex-col gap-6 py-10 pr-5 border-t border-[#E9E9E9]"
+              className="flex-1 min-w-[265px] flex flex-col gap-5 md:gap-6 py-[40px] md:py-10 pr-0 md:pr-5 border-t border-[#E9E9E9]"
             >
               <div className="flex flex-col gap-5">
                 <h3 className="font-brand font-normal text-[18px] leading-none tracking-[-0.54px] text-black">

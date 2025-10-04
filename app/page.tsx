@@ -1,5 +1,6 @@
 import { FloatingNav } from "@/components/landing/FloatingNav";
 import { MainNav } from "@/components/landing/MainNav";
+import { MobileNav } from "@/components/landing/MobileNav";
 import { Hero } from "@/components/landing/Hero";
 import { Benefits } from "@/components/landing/Benefits";
 import { HowItWorks } from "@/components/landing/HowItWorks";
@@ -10,7 +11,10 @@ import { Footer } from "@/components/landing/Footer";
 export default function LandingPage() {
   return (
     <div className="bg-white min-h-screen">
-      {/* Floating Navigation (always visible) */}
+      {/* Mobile Navigation (visible on mobile only) */}
+      <MobileNav />
+
+      {/* Floating Navigation (visible on desktop only) */}
       <FloatingNav />
 
       {/* Main Container */}
