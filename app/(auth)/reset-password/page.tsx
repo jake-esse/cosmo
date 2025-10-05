@@ -68,7 +68,7 @@ export default function ResetPasswordPage() {
               required
               disabled={isLoading}
               autoComplete="email"
-              className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 font-sans text-[15px] text-black border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
             />
             <p className="mt-2 font-sans text-[12px] text-[#6F6F6F]">
               We&apos;ll send a password reset link to this email

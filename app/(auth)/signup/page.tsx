@@ -10,14 +10,12 @@ export default function SignUpPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const [termsAccepted, setTermsAccepted] = useState(false)
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setIsLoading(true)
     setError(null)
-    setSuccess(null)
 
     if (!termsAccepted) {
       setError('Please accept the terms and conditions')
@@ -30,7 +28,7 @@ export default function SignUpPage() {
     const lastName = formData.get('lastName') as string
     const password = formData.get('password') as string
     const confirmPassword = formData.get('confirmPassword') as string
-    
+
     // Combine first and last name for the fullName field
     formData.set('fullName', `${firstName} ${lastName}`)
 
@@ -42,17 +40,15 @@ export default function SignUpPage() {
 
     try {
       const result = await signUp(formData)
-      
+
+      // Only handle errors - success redirects to /kyc/start automatically
       if (result?.error) {
         setError(result.error)
-      } else if (result?.requiresEmailConfirmation) {
-        setSuccess(result.message || 'Please check your email to confirm your account')
-      } else {
-        router.push('/dashboard')
+        setIsLoading(false)
       }
+      // If no error, the server action will redirect to /kyc/start
     } catch {
       setError('An unexpected error occurred')
-    } finally {
       setIsLoading(false)
     }
   }
@@ -74,7 +70,7 @@ export default function SignUpPage() {
         <div className="flex items-center">
           <Sparkles className="h-5 w-5 text-[#485C11] mr-2" />
           <p className="font-sans font-bold text-[14px] text-[#485C11]">
-            Earn 100 shares instantly upon signup!
+            Earn 100 shares after completing verification!
           </p>
         </div>
         <p className="font-sans text-[12px] text-[#485C11]/80 mt-1 ml-7">
@@ -96,7 +92,7 @@ export default function SignUpPage() {
               placeholder="John"
               required
               disabled={isLoading}
-              className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 font-sans text-[15px] text-black border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
             />
           </div>
           
@@ -111,7 +107,7 @@ export default function SignUpPage() {
               placeholder="Doe"
               required
               disabled={isLoading}
-              className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 font-sans text-[15px] text-black border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
             />
           </div>
         </div>
@@ -127,7 +123,7 @@ export default function SignUpPage() {
             placeholder="you@example.com"
             required
             disabled={isLoading}
-            className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 font-sans text-[15px] text-black border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
         </div>
 
@@ -143,7 +139,7 @@ export default function SignUpPage() {
             required
             disabled={isLoading}
             minLength={8}
-            className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 font-sans text-[15px] text-black border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
           <p className="mt-1 font-sans text-[12px] text-[#6F6F6F]">
             Must be at least 8 characters
@@ -162,7 +158,7 @@ export default function SignUpPage() {
             required
             disabled={isLoading}
             minLength={8}
-            className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 font-sans text-[15px] text-black border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
         </div>
 
@@ -177,7 +173,7 @@ export default function SignUpPage() {
             type="text"
             placeholder="Enter referral code"
             disabled={isLoading}
-            className="w-full px-4 py-3 font-sans text-[15px] border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 font-sans text-[15px] text-black border border-[#E9E9E9] rounded-[12px] focus:outline-none focus:ring-2 focus:ring-[#485C11] focus:border-transparent placeholder:text-[#929292] disabled:bg-gray-50 disabled:cursor-not-allowed"
           />
           <p className="mt-1 font-sans text-[12px] text-[#6F6F6F]">
             Both you and your referrer earn bonus shares!
@@ -213,15 +209,6 @@ export default function SignUpPage() {
           <div className="rounded-[12px] bg-red-50 border border-red-200 p-4">
             <p className="font-sans text-[14px] text-red-600">
               {error}
-            </p>
-          </div>
-        )}
-
-        {/* Success Message */}
-        {success && (
-          <div className="rounded-[12px] bg-[#DFECC6] border border-[#485C11]/20 p-4">
-            <p className="font-sans text-[14px] text-[#485C11]">
-              {success}
             </p>
           </div>
         )}

@@ -2,9 +2,11 @@
 
 import { ChatInterface } from '@/components/chat/ChatInterface'
 import { PageLayout } from '@/components/layout/PageLayout'
+import { ShareAwardModal } from '@/components/modals/ShareAwardModal'
 import { useEffect, useState, Suspense } from 'react'
 import { useNavigation } from '@/components/layout/NavigationContext'
 import { useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 function ChatPageContent() {
   const [userInitials, setUserInitials] = useState('JE')
@@ -12,6 +14,12 @@ function ChatPageContent() {
   const [currentChatId, setCurrentChatId] = useState<string | undefined>()
   const { setActiveChat } = useNavigation()
   const searchParams = useSearchParams()
+
+  // Share award modal state
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [sharesAwarded, setSharesAwarded] = useState(0)
+  const [referralCode, setReferralCode] = useState('')
+  const [wasReferred, setWasReferred] = useState(false)
 
   useEffect(() => {
     // Get user initials from localStorage or session
@@ -25,6 +33,74 @@ function ChatPageContent() {
       .slice(0, 2)
     setUserInitials(initials)
   }, [])
+
+  // Check if user just completed onboarding and show share award modal
+  useEffect(() => {
+    const checkAndShowShareModal = async () => {
+      // Check if modal has already been shown
+      const hasSeenModal = localStorage.getItem('share_award_modal_seen')
+      if (hasSeenModal) {
+        return
+      }
+
+      // Check if user is coming from onboarding
+      const fromOnboarding = searchParams.get('from') === 'onboarding' ||
+                            sessionStorage.getItem('just_completed_onboarding') === 'true'
+
+      if (!fromOnboarding) {
+        return
+      }
+
+      try {
+        const supabase = createClient()
+
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        // Get user's profile data
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('referral_code, referred_by, shares_awarded_at')
+          .eq('id', user.id)
+          .single()
+
+        if (!profile) return
+
+        // Only show modal if shares were recently awarded (within last hour)
+        if (!profile.shares_awarded_at) return
+
+        const sharesAwardedTime = new Date(profile.shares_awarded_at).getTime()
+        const oneHourAgo = Date.now() - (60 * 60 * 1000)
+
+        if (sharesAwardedTime < oneHourAgo) {
+          // Shares were awarded too long ago, don't show modal
+          return
+        }
+
+        // Get user's equity balance
+        const { data: balanceData } = await supabase
+          .rpc('get_user_balance', { p_user_id: user.id })
+
+        if (balanceData) {
+          setSharesAwarded(balanceData.total_balance || 0)
+        }
+
+        setReferralCode(profile.referral_code || '')
+        setWasReferred(!!profile.referred_by)
+
+        // Show the modal
+        setShowShareModal(true)
+
+        // Clear the session flag
+        sessionStorage.removeItem('just_completed_onboarding')
+      } catch (error) {
+        console.error('Error loading share award data:', error)
+      }
+    }
+
+    checkAndShowShareModal()
+  }, [searchParams])
 
   const handleConversationCreated = (conversationId: string, title: string) => {
     console.log('Conversation created:', conversationId, title)
@@ -41,6 +117,14 @@ function ChatPageContent() {
     // The refresh happens automatically via the useEffect in Sidebar
   }
 
+  const handleShareModalClose = (open: boolean) => {
+    setShowShareModal(open)
+    if (!open) {
+      // Mark modal as seen so it doesn't show again
+      localStorage.setItem('share_award_modal_seen', 'true')
+    }
+  }
+
   return (
     <PageLayout pageName={conversationTitle}>
       <ChatInterface
@@ -49,6 +133,15 @@ function ChatPageContent() {
         onConversationCreated={handleConversationCreated}
         onConversationUpdated={handleConversationUpdated}
         // Don't pass onSendMessage to use real AI streaming
+      />
+
+      {/* Share Award Modal */}
+      <ShareAwardModal
+        open={showShareModal}
+        onOpenChange={handleShareModalClose}
+        sharesAwarded={sharesAwarded}
+        referralCode={referralCode}
+        wasReferred={wasReferred}
       />
     </PageLayout>
   )

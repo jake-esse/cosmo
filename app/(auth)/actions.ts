@@ -129,17 +129,11 @@ export async function signUp(formData: FormData) {
       ipAddress,
       confirmed: !!data.user.confirmed_at
     })
-    
-    if (!data.user.confirmed_at) {
-      return { 
-        success: true, 
-        message: 'Please check your email to confirm your account',
-        requiresEmailConfirmation: true 
-      }
-    }
   }
 
-  redirect('/chat')
+  // Redirect to KYC immediately after signup
+  // Email verification happens in background but is not required
+  redirect('/kyc/start')
 }
 
 export async function signIn(formData: FormData) {

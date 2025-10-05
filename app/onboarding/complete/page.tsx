@@ -113,7 +113,13 @@ export default function CompletePage() {
           )}
 
           {/* CTA Button */}
-          <Link href="/chat">
+          <Link
+            href="/chat?from=onboarding"
+            onClick={() => {
+              // Set flag for share award modal
+              sessionStorage.setItem('just_completed_onboarding', 'true')
+            }}
+          >
             <button className="w-full px-6 py-4 bg-[#485C11] text-white rounded-2xl font-medium hover:bg-[#3a4a0e] transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
               Start Using Ampel
               <ArrowRight className="w-5 h-5" />
