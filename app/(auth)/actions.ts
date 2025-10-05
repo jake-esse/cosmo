@@ -95,12 +95,17 @@ export async function signUp(formData: FormData) {
     console.log('Referral code included in signup:', referralCode.toUpperCase())
   }
 
+  // Use Vercel URL if available, fallback to NEXT_PUBLIC_APP_URL
+  const redirectUrl = process.env.NEXT_PUBLIC_VERCEL_URL 
+    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}/auth/callback`
+    : `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`
+
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: metadata,
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
+      emailRedirectTo: redirectUrl,
     },
   })
 
