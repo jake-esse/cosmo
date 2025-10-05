@@ -47,7 +47,15 @@ export default function SignUpPage() {
         setIsLoading(false)
       }
       // If no error, the server action will redirect to /kyc/start
-    } catch {
+    } catch (error: unknown) {
+      // Check if this is a redirect (expected behavior from Next.js server actions)
+      if (error && typeof error === 'object' && 'digest' in error) {
+        const digest = (error as { digest?: string }).digest
+        if (digest?.includes('NEXT_REDIRECT')) {
+          // This is expected - the redirect is happening
+          return
+        }
+      }
       setError('An unexpected error occurred')
       setIsLoading(false)
     }

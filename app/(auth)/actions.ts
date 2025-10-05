@@ -129,9 +129,23 @@ export async function signUp(formData: FormData) {
       ipAddress,
       confirmed: !!data.user.confirmed_at
     })
+
+    // Sign the user in immediately to establish session
+    // This ensures they have an active session when redirected to KYC
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (signInError) {
+      console.error('Auto sign-in failed:', signInError)
+      return { error: 'Account created but sign-in failed. Please sign in manually.' }
+    }
+
+    console.log('User signed in successfully after signup')
   }
 
-  // Redirect to KYC immediately after signup
+  // Redirect to KYC immediately after signup with active session
   // Email verification happens in background but is not required
   redirect('/kyc/start')
 }
