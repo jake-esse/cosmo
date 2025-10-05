@@ -3,6 +3,7 @@ import { DM_Sans, Crimson_Text, Roboto_Mono } from "next/font/google";
 import "./globals.css";
 import { LayoutTransition } from "@/components/ui/transitions";
 import { ThemeProvider } from "@/components/theme-provider";
+import "@/lib/kyc/config-validation"; // Validate KYC env vars on startup
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",

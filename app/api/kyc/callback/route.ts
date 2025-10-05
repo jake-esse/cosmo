@@ -21,8 +21,12 @@ export async function GET(req: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
     if (!inquiryId) {
-      console.error('Missing inquiry-id in callback')
-      return NextResponse.redirect(`${appUrl}/kyc/error?reason=missing_inquiry_id`)
+      console.error('[KYC Callback] Missing inquiry-id in callback:', {
+        personaStatus,
+        referenceId,
+        timestamp: new Date().toISOString(),
+      })
+      return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=failed`)
     }
 
     const adminSupabase = createAdminClient()
@@ -35,8 +39,12 @@ export async function GET(req: NextRequest) {
       .maybeSingle()
 
     if (sessionError || !session) {
-      console.error('Session not found for inquiry:', inquiryId)
-      return NextResponse.redirect(`${appUrl}/kyc/error?reason=session_not_found`)
+      console.error('[KYC Callback] Session not found for inquiry:', {
+        inquiryId,
+        error: sessionError?.message,
+        timestamp: new Date().toISOString(),
+      })
+      return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=failed`)
     }
 
     try {
@@ -84,7 +92,11 @@ export async function GET(req: NextRequest) {
         .eq('id', session.id)
 
       if (updateSessionError) {
-        console.error('Error updating session:', updateSessionError)
+        console.error('[KYC Callback] Error updating session:', {
+          sessionId: session.id,
+          error: updateSessionError.message,
+          timestamp: new Date().toISOString(),
+        })
       }
 
       // Update or insert verification record
@@ -105,7 +117,12 @@ export async function GET(req: NextRequest) {
         })
 
       if (verificationError) {
-        console.error('Error updating verification:', verificationError)
+        console.error('[KYC Callback] Error updating verification:', {
+          userId: session.user_id,
+          inquiryId,
+          error: verificationError.message,
+          timestamp: new Date().toISOString(),
+        })
       }
 
       // If approved and we have an account ID, create persona_accounts record
@@ -120,24 +137,34 @@ export async function GET(req: NextRequest) {
           })
 
         if (accountError) {
-          console.error('Error creating persona account:', accountError)
+          console.error('[KYC Callback] Error creating persona account:', {
+            userId: session.user_id,
+            accountId,
+            error: accountError.message,
+            timestamp: new Date().toISOString(),
+          })
           // Don't fail the whole flow - account might already exist
         }
       }
 
       // Redirect based on final status
       if (sessionStatus === 'completed' && verificationStatus === 'approved') {
-        return NextResponse.redirect(`${appUrl}/dashboard?kyc=success`)
+        return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=success`)
       } else if (sessionStatus === 'failed' || verificationStatus === 'declined') {
-        return NextResponse.redirect(`${appUrl}/kyc/failed`)
+        return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=failed`)
       } else if (verificationStatus === 'needs_review') {
-        return NextResponse.redirect(`${appUrl}/kyc/pending`)
+        return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=pending`)
       } else {
         // Still in progress or pending
-        return NextResponse.redirect(`${appUrl}/kyc/processing`)
+        return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=pending`)
       }
     } catch (personaError) {
-      console.error('Error fetching inquiry from Persona:', personaError)
+      console.error('[KYC Callback] Error fetching inquiry from Persona:', {
+        inquiryId,
+        userId: session.user_id,
+        error: personaError instanceof Error ? personaError.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      })
 
       // Update session to failed
       await adminSupabase
@@ -148,11 +175,14 @@ export async function GET(req: NextRequest) {
         })
         .eq('id', session.id)
 
-      return NextResponse.redirect(`${appUrl}/kyc/error?reason=persona_api_error`)
+      return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=failed`)
     }
   } catch (error) {
-    console.error('Error in KYC callback:', error)
+    console.error('[KYC Callback] Unexpected error:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    })
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    return NextResponse.redirect(`${appUrl}/kyc/error?reason=internal_error`)
+    return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=failed`)
   }
 }

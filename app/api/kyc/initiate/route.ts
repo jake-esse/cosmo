@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { personaApi } from '@/lib/persona/client'
 import { detectDevice } from '@/lib/utils/device-detection'
+import { invalidateOldSessions } from '@/lib/kyc/edge-cases'
 import type { InitiateKYCResponse } from '@/types/persona'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
 
     if (deviceType === 'desktop') {
       // Desktop flow: Create session, return token for QR code
-      const { error: sessionError } = await adminSupabase
+      const { data: session, error: sessionError } = await adminSupabase
         .from('kyc_sessions')
         .insert({
           user_id: user.id,
@@ -101,14 +102,24 @@ export async function POST(req: NextRequest) {
           status: 'pending',
           expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
         })
+        .select()
+        .single()
 
-      if (sessionError) {
-        console.error('Error creating KYC session:', sessionError)
+      if (sessionError || !session) {
+        console.error('[KYC Initiate] Error creating session:', {
+          userId: user.id,
+          deviceType: 'desktop',
+          error: sessionError?.message,
+          timestamp: new Date().toISOString(),
+        })
         return NextResponse.json(
           { error: 'Failed to create verification session' },
           { status: 500 }
         )
       }
+
+      // Invalidate any old incomplete sessions for this user
+      await invalidateOldSessions(user.id, session.id)
 
       // Generate QR code URL (mobile device will scan this)
       const qrUrl = `${appUrl}/api/kyc/mobile-start/${sessionToken}`
@@ -129,7 +140,7 @@ export async function POST(req: NextRequest) {
         )
 
         // Create session with inquiry ID
-        const { error: sessionError } = await adminSupabase
+        const { data: session, error: sessionError } = await adminSupabase
           .from('kyc_sessions')
           .insert({
             user_id: user.id,
@@ -139,14 +150,25 @@ export async function POST(req: NextRequest) {
             status: 'in_progress',
             expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
           })
+          .select()
+          .single()
 
-        if (sessionError) {
-          console.error('Error creating KYC session:', sessionError)
+        if (sessionError || !session) {
+          console.error('[KYC Initiate] Error creating session:', {
+            userId: user.id,
+            deviceType: 'mobile',
+            inquiryId: inquiry.id,
+            error: sessionError?.message,
+            timestamp: new Date().toISOString(),
+          })
           return NextResponse.json(
             { error: 'Failed to create verification session' },
             { status: 500 }
           )
         }
+
+        // Invalidate any old incomplete sessions for this user
+        await invalidateOldSessions(user.id, session.id)
 
         // Create verification record
         await adminSupabase
@@ -163,7 +185,12 @@ export async function POST(req: NextRequest) {
           verificationUrl: url,
         } as InitiateKYCResponse)
       } catch (personaError) {
-        console.error('Error creating Persona inquiry:', personaError)
+        console.error('[KYC Initiate] Error creating Persona inquiry:', {
+          userId: user.id,
+          deviceType: 'mobile',
+          error: personaError instanceof Error ? personaError.message : 'Unknown error',
+          timestamp: new Date().toISOString(),
+        })
         return NextResponse.json(
           { error: 'Failed to create verification inquiry' },
           { status: 500 }
@@ -171,7 +198,10 @@ export async function POST(req: NextRequest) {
       }
     }
   } catch (error) {
-    console.error('Error in KYC initiate:', error)
+    console.error('[KYC Initiate] Unexpected error:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

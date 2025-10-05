@@ -26,7 +26,11 @@ export async function GET(
       .maybeSingle()
 
     if (sessionError) {
-      console.error('Error fetching KYC session:', sessionError)
+      console.error('[KYC Mobile Start] Error fetching KYC session:', {
+        token,
+        error: sessionError.message,
+        timestamp: new Date().toISOString(),
+      })
       return NextResponse.json(
         { error: 'Invalid session' },
         { status: 400 }
@@ -98,7 +102,12 @@ export async function GET(
         .eq('id', session.id)
 
       if (updateError) {
-        console.error('Error updating KYC session:', updateError)
+        console.error('[KYC Mobile Start] Error updating KYC session:', {
+          sessionId: session.id,
+          inquiryId: inquiry.id,
+          error: updateError.message,
+          timestamp: new Date().toISOString(),
+        })
         // Continue anyway - inquiry was created
       }
 
@@ -114,7 +123,12 @@ export async function GET(
       // Redirect to Persona hosted flow
       return NextResponse.redirect(url)
     } catch (personaError) {
-      console.error('Error creating Persona inquiry:', personaError)
+      console.error('[KYC Mobile Start] Error creating Persona inquiry:', {
+        userId: session.user_id,
+        sessionId: session.id,
+        error: personaError instanceof Error ? personaError.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      })
 
       // Update session status to failed
       await adminSupabase
@@ -131,7 +145,10 @@ export async function GET(
       )
     }
   } catch (error) {
-    console.error('Error in mobile KYC start:', error)
+    console.error('[KYC Mobile Start] Unexpected error:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    })
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

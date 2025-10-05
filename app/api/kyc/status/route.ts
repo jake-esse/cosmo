@@ -41,7 +41,12 @@ export async function GET(req: NextRequest) {
         .maybeSingle()
 
       if (error) {
-        console.error('Error fetching KYC session:', error)
+        console.error('[KYC Status] Error fetching KYC session:', {
+          sessionToken,
+          userId: user.id,
+          error: error.message,
+          timestamp: new Date().toISOString(),
+        })
         return NextResponse.json(
           {
             success: false,
@@ -58,7 +63,11 @@ export async function GET(req: NextRequest) {
         .rpc('get_active_session', { p_user_id: user.id })
 
       if (error) {
-        console.error('Error calling get_active_session:', error)
+        console.error('[KYC Status] Error calling get_active_session:', {
+          userId: user.id,
+          error: error.message,
+          timestamp: new Date().toISOString(),
+        })
         return NextResponse.json(
           {
             success: false,
@@ -108,7 +117,10 @@ export async function GET(req: NextRequest) {
       inquiryId: session.inquiry_id || undefined,
     } as KYCStatusResponse)
   } catch (error) {
-    console.error('Error in KYC status check:', error)
+    console.error('[KYC Status] Unexpected error:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString(),
+    })
     return NextResponse.json(
       {
         success: false,
