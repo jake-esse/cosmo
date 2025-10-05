@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
@@ -32,6 +33,19 @@ export async function GET(request: Request) {
           console.error('[AUTH_CALLBACK] Exception during referral completion:', err)
           // Don't fail auth flow
         }
+      }
+
+      // Check if user has completed KYC verification (highest priority)
+      const adminSupabase = createAdminClient()
+      const { data: kycAccount } = await adminSupabase
+        .from('persona_accounts')
+        .select('id')
+        .eq('user_id', data.user.id)
+        .maybeSingle()
+
+      // If no KYC account, redirect to KYC start
+      if (!kycAccount) {
+        return NextResponse.redirect(new URL('/kyc/start', requestUrl.origin))
       }
 
       // Check if user has completed education
