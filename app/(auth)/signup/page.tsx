@@ -41,12 +41,12 @@ export default function SignUpPage() {
     try {
       const result = await signUp(formData)
 
-      // Only handle errors - success redirects to /kyc/start automatically
+      // Only handle errors - success redirects to /check-email automatically
       if (result?.error) {
         setError(result.error)
         setIsLoading(false)
       }
-      // If no error, the server action will redirect to /kyc/start
+      // If no error, the server action will redirect to /check-email
     } catch (error: unknown) {
       // Check if this is a redirect (expected behavior from Next.js server actions)
       if (error && typeof error === 'object' && 'digest' in error) {

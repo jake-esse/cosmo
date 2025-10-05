@@ -11,79 +11,103 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
-      // Check if this is a fresh email verification (within last 5 minutes)
-      const emailConfirmedAt = data.user.email_confirmed_at
-        ? new Date(data.user.email_confirmed_at)
-        : null
-      const now = new Date()
-      const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000)
+      console.log('[AUTH_CALLBACK] Session established for user:', data.user.id)
 
-      const isRecentEmailVerification = emailConfirmedAt && emailConfirmedAt > fiveMinutesAgo
-
-      if (isRecentEmailVerification) {
-        // This is an email verification callback
-        console.log('[AUTH_CALLBACK] Email verification detected')
-
-        // Try to complete any pending referrals (but don't award shares yet)
-        try {
-          const { data: result, error } = await supabase.rpc(
-            'complete_pending_referral_for_user',
-            { p_user_id: data.user.id }
-          )
-
-          if (result?.success) {
-            console.log('[AUTH_CALLBACK] Referral tracked:', result)
-          } else if (result?.reason) {
-            console.log('[AUTH_CALLBACK] Referral status:', result.reason)
-          }
-
-          if (error) {
-            console.warn('[AUTH_CALLBACK] Error tracking referral:', error.message)
-          }
-        } catch (err) {
-          console.error('[AUTH_CALLBACK] Exception during referral tracking:', err)
-        }
-
-        // Redirect to verification success page
-        return NextResponse.redirect(new URL('/verification', requestUrl.origin))
-      }
-
-      // Not a fresh email verification - this is a regular callback (e.g., password reset)
-      // Check user status and route appropriately
       const adminSupabase = createAdminClient()
+      const now = new Date()
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
 
-      // Check if user has completed KYC
-      const { data: kycAccount } = await adminSupabase
-        .from('persona_accounts')
-        .select('id')
-        .eq('user_id', data.user.id)
-        .maybeSingle()
-
-      // If no KYC account, redirect to KYC start
-      if (!kycAccount) {
-        console.log('[AUTH_CALLBACK] No KYC found, redirecting to /kyc/start')
-        return NextResponse.redirect(new URL('/kyc/start', requestUrl.origin))
-      }
-
-      // Check if user has completed education/onboarding
-      const { data: profile } = await supabase
+      // Get user profile to check email_verified_at and user creation time
+      const { data: profile } = await adminSupabase
         .from('profiles')
-        .select('education_completed_at')
+        .select('email_verified_at, created_at, education_completed_at')
         .eq('id', data.user.id)
         .single()
 
-      // Redirect based on onboarding status
-      if (!profile?.education_completed_at) {
-        console.log('[AUTH_CALLBACK] Education incomplete, redirecting to /onboarding')
-        return NextResponse.redirect(new URL('/onboarding', requestUrl.origin))
+      const userCreatedAt = profile?.created_at ? new Date(profile.created_at) : null
+      const emailVerifiedAt = profile?.email_verified_at ? new Date(profile.email_verified_at) : null
+
+      // Determine if this is first-time email verification
+      const isFirstTimeVerification =
+        userCreatedAt &&
+        userCreatedAt > twentyFourHoursAgo &&
+        !emailVerifiedAt
+
+      console.log('[AUTH_CALLBACK] User verification status:', {
+        userId: data.user.id,
+        createdAt: userCreatedAt?.toISOString(),
+        emailVerifiedAt: emailVerifiedAt?.toISOString(),
+        isFirstTime: isFirstTimeVerification
+      })
+
+      // Update email_verified_at timestamp if not already set
+      if (!emailVerifiedAt) {
+        console.log('[AUTH_CALLBACK] Updating email_verified_at timestamp')
+        await adminSupabase
+          .from('profiles')
+          .update({ email_verified_at: now.toISOString() })
+          .eq('id', data.user.id)
       }
 
-      // Everything complete, go to chat
-      console.log('[AUTH_CALLBACK] User fully onboarded, redirecting to /chat')
-      return NextResponse.redirect(new URL('/chat', requestUrl.origin))
+      // Try to complete any pending referrals (but don't award shares yet)
+      try {
+        const { data: result, error } = await supabase.rpc(
+          'complete_pending_referral_for_user',
+          { p_user_id: data.user.id }
+        )
+
+        if (result?.success) {
+          console.log('[AUTH_CALLBACK] Referral tracked:', result)
+        } else if (result?.reason) {
+          console.log('[AUTH_CALLBACK] Referral status:', result.reason)
+        }
+
+        if (error) {
+          console.warn('[AUTH_CALLBACK] Error tracking referral:', error.message)
+        }
+      } catch (err) {
+        console.error('[AUTH_CALLBACK] Exception during referral tracking:', err)
+      }
+
+      // Route based on first-time vs subsequent verification
+      if (isFirstTimeVerification) {
+        // First-time verification - route based on user status
+        console.log('[AUTH_CALLBACK] First-time verification - checking user completion status')
+
+        // Check if user has completed KYC
+        const { data: kycAccount } = await adminSupabase
+          .from('persona_accounts')
+          .select('id')
+          .eq('user_id', data.user.id)
+          .maybeSingle()
+
+        // If no KYC account, redirect to KYC start
+        if (!kycAccount) {
+          console.log('[AUTH_CALLBACK] No KYC found → Redirecting to /kyc/start')
+          return NextResponse.redirect(new URL('/kyc/start', requestUrl.origin))
+        }
+
+        // Check if user has completed education/onboarding
+        if (!profile?.education_completed_at) {
+          console.log('[AUTH_CALLBACK] KYC complete but education incomplete → Redirecting to /onboarding')
+          return NextResponse.redirect(new URL('/onboarding', requestUrl.origin))
+        }
+
+        // Everything complete, go to chat
+        console.log('[AUTH_CALLBACK] User fully onboarded → Redirecting to /chat')
+        return NextResponse.redirect(new URL('/chat', requestUrl.origin))
+      } else {
+        // Subsequent verification (password reset, re-verification, etc.)
+        console.log('[AUTH_CALLBACK] Subsequent verification → Redirecting to /verification success page')
+        return NextResponse.redirect(new URL('/verification', requestUrl.origin))
+      }
     }
+
+    // Code exchange failed
+    console.error('[AUTH_CALLBACK] Code exchange failed:', error?.message)
   }
 
   // Default redirect to login if something went wrong
+  console.log('[AUTH_CALLBACK] No code or session establishment failed → Redirecting to /login')
   return NextResponse.redirect(new URL('/login', requestUrl.origin))
 }
