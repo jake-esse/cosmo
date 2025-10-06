@@ -34,6 +34,7 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname.startsWith('/(auth)')
   const isDashboard = request.nextUrl.pathname.startsWith('/dashboard')
   const isOnboarding = request.nextUrl.pathname.startsWith('/onboarding')
+  const isKyc = request.nextUrl.pathname.startsWith('/kyc')
   const isApiRoute = request.nextUrl.pathname.startsWith('/api')
   const isChat = request.nextUrl.pathname.startsWith('/chat')
   const isPublicRoute = request.nextUrl.pathname === '/' ||
@@ -58,6 +59,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  if (!user && isKyc) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
   if (user && isAuthPage) {
     const url = request.nextUrl.clone()
     url.pathname = '/chat'
@@ -65,7 +72,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check onboarding status for authenticated users
-  if (user && !isOnboarding && !isApiRoute && !isAuthPage && !isPublicRoute) {
+  // Exclude KYC routes since KYC must be completed before onboarding
+  if (user && !isOnboarding && !isKyc && !isApiRoute && !isAuthPage && !isPublicRoute) {
     // Check if user has completed education
     const { data: profile } = await supabase
       .from('profiles')
