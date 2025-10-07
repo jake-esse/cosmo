@@ -99,6 +99,7 @@ export async function POST(req: NextRequest) {
           user_id: user.id,
           session_token: sessionToken,
           device_type: 'desktop',
+          initiated_from: 'desktop_qr', // Track that this is a QR code flow
           status: 'pending',
           expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
         })
@@ -147,6 +148,7 @@ export async function POST(req: NextRequest) {
             session_token: sessionToken,
             inquiry_id: inquiry.id,
             device_type: 'mobile',
+            initiated_from: 'mobile_direct', // Track that this is a direct mobile flow
             status: 'in_progress',
             expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
           })

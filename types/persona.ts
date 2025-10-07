@@ -157,6 +157,11 @@ export interface PersonaCallbackParams {
 // Device Types
 export type DeviceType = 'mobile' | 'desktop' | 'unknown'
 
+// KYC Flow Context (how the verification was initiated)
+export type KYCFlowContext =
+  | 'mobile_direct'   // User started KYC directly on mobile device
+  | 'desktop_qr'      // User scanned QR code from desktop on their mobile
+
 // KYC Session Status (internal)
 export type KYCSessionStatus =
   | 'pending'

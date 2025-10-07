@@ -147,10 +147,19 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      // Redirect based on final status
+      // Redirect based on final status AND flow context
       // Direct redirect to result pages to reduce redirect hops and preserve session
       if (sessionStatus === 'completed' && verificationStatus === 'approved') {
-        return NextResponse.redirect(`${appUrl}/kyc/success`)
+        // Check flow context to determine routing
+        // - mobile_direct: User started on mobile → redirect to /kyc/success → /onboarding
+        // - desktop_qr: User scanned QR from desktop → redirect to /kyc/complete-on-web (mobile terminal page)
+        if (session.initiated_from === 'desktop_qr') {
+          // QR code flow: mobile user sees "return to computer", desktop polls and redirects
+          return NextResponse.redirect(`${appUrl}/kyc/complete-on-web`)
+        } else {
+          // Mobile direct flow: proceed to success page and onboarding
+          return NextResponse.redirect(`${appUrl}/kyc/success`)
+        }
       } else if (sessionStatus === 'failed' || verificationStatus === 'declined') {
         return NextResponse.redirect(`${appUrl}/kyc/fail`)
       } else if (verificationStatus === 'needs_review') {

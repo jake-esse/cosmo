@@ -92,6 +92,7 @@ export async function GET(
       )
 
       // Update session with inquiry ID and status
+      // Note: initiated_from is preserved from when the session was created
       const { error: updateError } = await adminSupabase
         .from('kyc_sessions')
         .update({
