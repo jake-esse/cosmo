@@ -29,7 +29,21 @@ export function QRCodeDisplay({
 
   useEffect(() => {
     const generateQRCode = async () => {
-      if (!canvasRef.current || !url) {
+      console.log('[QRCodeDisplay] Generating QR code...', {
+        hasCanvas: !!canvasRef.current,
+        hasUrl: !!url,
+        url: url,
+        size: size,
+      })
+
+      if (!canvasRef.current) {
+        console.warn('[QRCodeDisplay] Canvas ref not available')
+        setLoading(false)
+        return
+      }
+
+      if (!url) {
+        console.warn('[QRCodeDisplay] No URL provided')
         setLoading(false)
         return
       }
@@ -38,6 +52,7 @@ export function QRCodeDisplay({
         setLoading(true)
         setError(null)
 
+        console.log('[QRCodeDisplay] Calling QRCode.toCanvas...')
         await QRCode.toCanvas(canvasRef.current, url, {
           width: size,
           margin: 2,
@@ -48,9 +63,10 @@ export function QRCodeDisplay({
           errorCorrectionLevel: 'M', // Medium error correction
         })
 
+        console.log('[QRCodeDisplay] QR code generated successfully')
         setLoading(false)
       } catch (err) {
-        console.error('Error generating QR code:', err)
+        console.error('[QRCodeDisplay] Error generating QR code:', err)
         setError('Failed to generate QR code')
         setLoading(false)
       }

@@ -47,6 +47,7 @@ export function DesktopQRFlow() {
   useEffect(() => {
     const initiateSession = async () => {
       try {
+        console.log('[DesktopQRFlow] Initiating KYC session...')
         setLoading(true)
         setInitiateError(null)
 
@@ -57,27 +58,48 @@ export function DesktopQRFlow() {
           },
         })
 
+        console.log('[DesktopQRFlow] API response status:', response.status)
+
         if (!response.ok) {
+          const errorText = await response.text()
+          console.error('[DesktopQRFlow] API error response:', errorText)
           throw new Error(`HTTP ${response.status}: Failed to initiate verification`)
         }
 
         const data: InitiateKYCResponse = await response.json()
+        console.log('[DesktopQRFlow] API response data:', {
+          success: data.success,
+          deviceType: data.deviceType,
+          hasSessionToken: !!data.sessionToken,
+          hasQrUrl: !!data.qrUrl,
+          qrUrlLength: data.qrUrl?.length || 0,
+        })
 
         if (!data.success) {
+          console.error('[DesktopQRFlow] API returned success=false:', data.error)
           throw new Error(data.error || 'Failed to initiate verification')
         }
 
         if (data.sessionToken && data.qrUrl) {
+          console.log('[DesktopQRFlow] Setting session token and QR URL:', {
+            sessionToken: data.sessionToken.substring(0, 8) + '...',
+            qrUrl: data.qrUrl,
+          })
           setSessionToken(data.sessionToken)
           setQrUrl(data.qrUrl)
           setExpiresAt(new Date(Date.now() + SESSION_DURATION_MS))
         } else {
+          console.error('[DesktopQRFlow] Missing sessionToken or qrUrl in response:', {
+            hasSessionToken: !!data.sessionToken,
+            hasQrUrl: !!data.qrUrl,
+          })
           throw new Error('Invalid response from server')
         }
 
+        console.log('[DesktopQRFlow] Session initiated successfully')
         setLoading(false)
       } catch (err) {
-        console.error('Error initiating session:', err)
+        console.error('[DesktopQRFlow] Error initiating session:', err)
         setInitiateError(err instanceof Error ? err.message : 'Failed to start verification')
         setLoading(false)
       }
@@ -300,7 +322,13 @@ export function DesktopQRFlow() {
             <div className="grid md:grid-cols-2 gap-8 items-center">
               {/* QR Code */}
               <div className="flex justify-center">
-                <QRCodeDisplay url={qrUrl} size={300} />
+                {qrUrl ? (
+                  <QRCodeDisplay url={qrUrl} size={300} />
+                ) : (
+                  <div className="bg-gray-100 border-2 border-gray-300 rounded-2xl p-8 flex items-center justify-center" style={{ width: 300, height: 300 }}>
+                    <p className="text-gray-500 text-center">Loading QR code...</p>
+                  </div>
+                )}
               </div>
 
               {/* Instructions */}

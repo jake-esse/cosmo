@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
         referenceId,
         timestamp: new Date().toISOString(),
       })
-      return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=failed`)
+      return NextResponse.redirect(`${appUrl}/kyc/fail`)
     }
 
     const adminSupabase = createAdminClient()
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
         error: sessionError?.message,
         timestamp: new Date().toISOString(),
       })
-      return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=failed`)
+      return NextResponse.redirect(`${appUrl}/kyc/fail`)
     }
 
     try {
@@ -148,15 +148,16 @@ export async function GET(req: NextRequest) {
       }
 
       // Redirect based on final status
+      // Direct redirect to result pages to reduce redirect hops and preserve session
       if (sessionStatus === 'completed' && verificationStatus === 'approved') {
-        return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=success`)
+        return NextResponse.redirect(`${appUrl}/kyc/success`)
       } else if (sessionStatus === 'failed' || verificationStatus === 'declined') {
-        return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=failed`)
+        return NextResponse.redirect(`${appUrl}/kyc/fail`)
       } else if (verificationStatus === 'needs_review') {
-        return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=pending`)
+        return NextResponse.redirect(`${appUrl}/kyc/pending`)
       } else {
         // Still in progress or pending
-        return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=pending`)
+        return NextResponse.redirect(`${appUrl}/kyc/pending`)
       }
     } catch (personaError) {
       console.error('[KYC Callback] Error fetching inquiry from Persona:', {
@@ -175,7 +176,7 @@ export async function GET(req: NextRequest) {
         })
         .eq('id', session.id)
 
-      return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=failed`)
+      return NextResponse.redirect(`${appUrl}/kyc/fail`)
     }
   } catch (error) {
     console.error('[KYC Callback] Unexpected error:', {
@@ -183,6 +184,6 @@ export async function GET(req: NextRequest) {
       timestamp: new Date().toISOString(),
     })
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    return NextResponse.redirect(`${appUrl}/kyc/callback?kyc=failed`)
+    return NextResponse.redirect(`${appUrl}/kyc/fail`)
   }
 }
