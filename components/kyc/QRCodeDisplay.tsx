@@ -28,19 +28,18 @@ export function QRCodeDisplay({
   const [loading, setLoading] = useState<boolean>(true)
 
   useEffect(() => {
+    let isMounted = true
+    let retryCount = 0
+    const MAX_RETRIES = 50 // 50 attempts * 100ms = 5 seconds max wait
+
     const generateQRCode = async () => {
       console.log('[QRCodeDisplay] Generating QR code...', {
         hasCanvas: !!canvasRef.current,
         hasUrl: !!url,
         url: url,
         size: size,
+        retryCount,
       })
-
-      if (!canvasRef.current) {
-        console.warn('[QRCodeDisplay] Canvas ref not available')
-        setLoading(false)
-        return
-      }
 
       if (!url) {
         console.warn('[QRCodeDisplay] No URL provided')
@@ -48,11 +47,43 @@ export function QRCodeDisplay({
         return
       }
 
-      try {
-        setLoading(true)
-        setError(null)
+      // Wait for canvas to be available with retry mechanism
+      if (!canvasRef.current) {
+        if (retryCount < MAX_RETRIES) {
+          console.log('[QRCodeDisplay] Canvas ref not available yet, retrying...', {
+            attempt: retryCount + 1,
+            maxRetries: MAX_RETRIES,
+          })
+          retryCount++
 
-        console.log('[QRCodeDisplay] Calling QRCode.toCanvas...')
+          // Use requestAnimationFrame to wait for next browser paint
+          requestAnimationFrame(() => {
+            if (isMounted) {
+              generateQRCode()
+            }
+          })
+          return
+        } else {
+          console.error('[QRCodeDisplay] Canvas ref not available after max retries')
+          if (isMounted) {
+            setError('Failed to initialize QR code canvas')
+            setLoading(false)
+          }
+          return
+        }
+      }
+
+      try {
+        if (isMounted) {
+          setLoading(true)
+          setError(null)
+        }
+
+        console.log('[QRCodeDisplay] Canvas available, calling QRCode.toCanvas...', {
+          canvasWidth: canvasRef.current.width,
+          canvasHeight: canvasRef.current.height,
+        })
+
         await QRCode.toCanvas(canvasRef.current, url, {
           width: size,
           margin: 2,
@@ -64,53 +95,63 @@ export function QRCodeDisplay({
         })
 
         console.log('[QRCodeDisplay] QR code generated successfully')
-        setLoading(false)
+        if (isMounted) {
+          setLoading(false)
+        }
       } catch (err) {
         console.error('[QRCodeDisplay] Error generating QR code:', err)
-        setError('Failed to generate QR code')
-        setLoading(false)
+        if (isMounted) {
+          setError('Failed to generate QR code')
+          setLoading(false)
+        }
       }
     }
 
     generateQRCode()
+
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false
+    }
   }, [url, size])
-
-  if (error) {
-    return (
-      <div
-        className={`flex flex-col items-center justify-center bg-red-50 border-2 border-red-200 rounded-2xl p-8 ${className}`}
-        style={{ width: size, height: size }}
-      >
-        <p className="text-red-600 text-sm text-center">{error}</p>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div
-        className={`flex items-center justify-center bg-gray-50 border-2 border-gray-200 rounded-2xl ${className}`}
-        style={{ width: size, height: size }}
-      >
-        <div className="animate-pulse">
-          <Smartphone className="w-12 h-12 text-gray-400" />
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className={`flex flex-col items-center gap-4 ${className}`}>
-      {/* QR Code Canvas */}
-      <div className="bg-white p-4 rounded-2xl shadow-lg border-2 border-gray-200">
+      {/* QR Code Canvas Container */}
+      <div className="relative bg-white p-4 rounded-2xl shadow-lg border-2 border-gray-200">
+        {/* Canvas - always rendered so ref is available */}
         <canvas
           ref={canvasRef}
           className="block"
           style={{
             width: size,
             height: size,
+            opacity: loading || error ? 0 : 1,
+            transition: 'opacity 0.3s ease-in-out',
           }}
         />
+
+        {/* Loading Overlay */}
+        {loading && !error && (
+          <div
+            className="absolute inset-0 flex items-center justify-center bg-gray-50 rounded-lg"
+            style={{ margin: '1rem' }}
+          >
+            <div className="animate-pulse">
+              <Smartphone className="w-12 h-12 text-gray-400" />
+            </div>
+          </div>
+        )}
+
+        {/* Error Overlay */}
+        {error && (
+          <div
+            className="absolute inset-0 flex items-center justify-center bg-red-50 rounded-lg"
+            style={{ margin: '1rem' }}
+          >
+            <p className="text-red-600 text-sm text-center px-4">{error}</p>
+          </div>
+        )}
       </div>
 
       {/* Manual Entry URL */}
