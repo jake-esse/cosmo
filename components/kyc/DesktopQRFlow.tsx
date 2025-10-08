@@ -33,6 +33,9 @@ export function DesktopQRFlow() {
   const [initiateError, setInitiateError] = useState<string | null>(null)
   const [loading, setLoading] = useState<boolean>(true)
 
+  // Redirect state
+  const [isRedirecting, setIsRedirecting] = useState<boolean>(false)
+
   // Timer state
   const [expiresAt, setExpiresAt] = useState<Date | null>(null)
   const [timeRemaining, setTimeRemaining] = useState<number>(SESSION_DURATION_MS)
@@ -126,13 +129,28 @@ export function DesktopQRFlow() {
 
   // Auto-redirect on completion
   useEffect(() => {
-    if (statusData?.status === 'completed') {
-      // Small delay for UX
+    if (!statusData?.status || isRedirecting) return
+
+    console.log('[DesktopQRFlow] Status changed:', {
+      status: statusData.status,
+      completed: statusData.completed,
+      inquiryId: statusData.inquiryId,
+    })
+
+    // Handle completed verification
+    if (statusData.status === 'completed') {
+      console.log('[DesktopQRFlow] Verification completed - initiating redirect to /onboarding')
+      setIsRedirecting(true)
+
+      // Small delay for UX (let user see success message)
       setTimeout(() => {
+        console.log('[DesktopQRFlow] Executing redirect to /onboarding')
+        // Refresh router to ensure middleware runs and profile is re-fetched
+        router.refresh()
         router.push('/onboarding')
       }, 1500)
     }
-  }, [statusData?.status, router])
+  }, [statusData?.status, statusData?.completed, statusData?.inquiryId, router, isRedirecting])
 
   // Format time remaining
   const formatTime = (ms: number): string => {
@@ -253,7 +271,14 @@ export function DesktopQRFlow() {
               <h2 className="text-2xl font-semibold text-gray-900">
                 Verification Complete!
               </h2>
-              <p className="text-gray-600">Redirecting you now...</p>
+              {isRedirecting ? (
+                <div className="flex items-center justify-center gap-2 text-gray-600">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <p>Redirecting to onboarding...</p>
+                </div>
+              ) : (
+                <p className="text-gray-600">Redirecting you now...</p>
+              )}
             </div>
           </CardContent>
         </Card>

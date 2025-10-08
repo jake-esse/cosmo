@@ -10,6 +10,8 @@ export async function GET(request: Request) {
 
   const supabase = await createClient()
   let userId: string | undefined
+  let authProvider: string = 'email' // Default to email
+  let isOAuthUser: boolean = false
 
   // Handle PKCE flow (OAuth, magic links with code)
   if (code) {
@@ -18,7 +20,14 @@ export async function GET(request: Request) {
 
     if (!error && data.user) {
       userId = data.user.id
+
+      // Detect auth provider from user metadata
+      const provider = data.user.app_metadata?.provider || 'email'
+      authProvider = provider
+      isOAuthUser = provider !== 'email'
+
       console.log('[AUTH_CALLBACK] PKCE session established for user:', userId)
+      console.log('[AUTH_CALLBACK] Auth method detected:', provider, isOAuthUser ? '(OAuth)' : '(Email/Password)')
     } else {
       console.error('[AUTH_CALLBACK] Code exchange failed:', error?.message)
     }
@@ -33,7 +42,10 @@ export async function GET(request: Request) {
 
     if (!error && data.user) {
       userId = data.user.id
+      authProvider = 'email'
+      isOAuthUser = false
       console.log('[AUTH_CALLBACK] Email verification session established for user:', userId)
+      console.log('[AUTH_CALLBACK] Auth method: email (Email/Password)')
     } else {
       console.error('[AUTH_CALLBACK] Email verification failed:', error?.message)
     }
@@ -48,9 +60,25 @@ export async function GET(request: Request) {
     // Get user profile to check email_verified_at and user creation time
     const { data: profile } = await adminSupabase
       .from('profiles')
-      .select('email_verified_at, created_at, education_completed_at')
+      .select('email_verified_at, created_at, education_completed_at, auth_provider')
       .eq('id', userId)
       .single()
+
+    // Store auth provider if not already set
+    if (profile && !profile.auth_provider) {
+      try {
+        console.log('[AUTH_CALLBACK] Storing auth_provider:', authProvider)
+        await adminSupabase
+          .from('profiles')
+          .update({ auth_provider: authProvider })
+          .eq('id', userId)
+      } catch (error) {
+        console.warn('[AUTH_CALLBACK] Failed to store auth_provider:', error)
+        // Continue anyway - this is not critical
+      }
+    } else if (profile?.auth_provider) {
+      console.log('[AUTH_CALLBACK] Auth provider already set:', profile.auth_provider)
+    }
 
     const userCreatedAt = profile?.created_at ? new Date(profile.created_at) : null
     const emailVerifiedAt = profile?.email_verified_at ? new Date(profile.email_verified_at) : null
@@ -63,6 +91,8 @@ export async function GET(request: Request) {
 
     console.log('[AUTH_CALLBACK] User verification status:', {
       userId,
+      authProvider,
+      isOAuth: isOAuthUser,
       createdAt: userCreatedAt?.toISOString(),
       emailVerifiedAt: emailVerifiedAt?.toISOString(),
       isFirstTime: isFirstTimeVerification
@@ -70,11 +100,18 @@ export async function GET(request: Request) {
 
     // Update email_verified_at timestamp if not already set
     if (!emailVerifiedAt) {
-      console.log('[AUTH_CALLBACK] Updating email_verified_at timestamp')
+      if (isOAuthUser) {
+        console.log('[AUTH_CALLBACK] OAuth user - email pre-verified by provider, setting email_verified_at')
+      } else {
+        console.log('[AUTH_CALLBACK] Email user - verification completed, setting email_verified_at')
+      }
+
       await adminSupabase
         .from('profiles')
         .update({ email_verified_at: now.toISOString() })
         .eq('id', userId)
+    } else {
+      console.log('[AUTH_CALLBACK] Email already verified at:', emailVerifiedAt.toISOString())
     }
 
     // Try to complete any pending referrals (but don't award shares yet)
@@ -109,24 +146,32 @@ export async function GET(request: Request) {
         .eq('user_id', userId)
         .maybeSingle()
 
+      const kycComplete = !!kycAccount
+      const educationComplete = !!profile?.education_completed_at
+
+      console.log('[AUTH_CALLBACK] Completion status:', {
+        kycComplete,
+        educationComplete
+      })
+
       // If no KYC account, redirect to KYC start
-      if (!kycAccount) {
-        console.log('[AUTH_CALLBACK] No KYC found → Redirecting to /kyc/start')
+      if (!kycComplete) {
+        console.log('[AUTH_CALLBACK] Routing decision: /kyc/start (reason: KYC not started)')
         return NextResponse.redirect(new URL('/kyc/start', requestUrl.origin))
       }
 
       // Check if user has completed education/onboarding
-      if (!profile?.education_completed_at) {
-        console.log('[AUTH_CALLBACK] KYC complete but education incomplete → Redirecting to /onboarding')
+      if (!educationComplete) {
+        console.log('[AUTH_CALLBACK] Routing decision: /onboarding (reason: education incomplete, KYC complete)')
         return NextResponse.redirect(new URL('/onboarding', requestUrl.origin))
       }
 
       // Everything complete, go to chat
-      console.log('[AUTH_CALLBACK] User fully onboarded → Redirecting to /chat')
+      console.log('[AUTH_CALLBACK] Routing decision: /chat (reason: all requirements complete)')
       return NextResponse.redirect(new URL('/chat', requestUrl.origin))
     } else {
       // Subsequent verification (password reset, re-verification, etc.)
-      console.log('[AUTH_CALLBACK] Subsequent verification → Redirecting to /verification success page')
+      console.log('[AUTH_CALLBACK] Routing decision: /verification (reason: subsequent verification, not first-time)')
       return NextResponse.redirect(new URL('/verification', requestUrl.origin))
     }
   }
