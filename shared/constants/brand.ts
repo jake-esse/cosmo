@@ -26,7 +26,7 @@ export const BRAND = {
   
   // Color palette
   colors: {
-    primary: '#1FB2CD', // Sky/Cyan
+    primary: '#485C11', // Primary Green
     background: '#FFFFFF',
     text: {
       primary: '#0F172A', // Slate-900
@@ -38,12 +38,17 @@ export const BRAND = {
       strong: '#E2E8F0', // Slate-200
     },
   },
-  
-  // Typography
+
+  /**
+   * Typography
+   * - DM Sans: Used for all UI text, buttons, and labels (clear, readable)
+   * - Crimson Text: Used for headlines and brand messaging (elegant serif)
+   * - Roboto Mono: Used for code, technical text, and captions (monospace readability)
+   */
   fonts: {
-    ui: 'Inter',
-    brand: 'Crimson Pro',
-    mono: 'Inter',
+    ui: 'DM Sans',
+    brand: 'Crimson Text',
+    mono: 'Roboto Mono',
   },
   
   // Equity system values

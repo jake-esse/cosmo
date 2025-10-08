@@ -24,37 +24,37 @@ export const colors = {
 
 // Typography - From Figma specifications
 export const typography = {
-  // Small text - Inter Medium 14px/14px
+  // Small text - DM Sans Medium 14px/14px
   small: {
-    fontFamily: 'Inter',
+    fontFamily: 'DM Sans',
     fontSize: '14px',
     fontWeight: 500,
     lineHeight: '14px',
   },
-  // Subtle medium - Inter Medium 14px/20px
+  // Subtle medium - DM Sans Medium 14px/20px
   subtleMedium: {
-    fontFamily: 'Inter',
+    fontFamily: 'DM Sans',
     fontSize: '14px',
     fontWeight: 500,
     lineHeight: '20px',
   },
-  // Headline large - Crimson Pro 36px/40px
+  // Headline large - Crimson Text 36px/40px
   headlineLarge: {
-    fontFamily: 'Crimson Pro',
+    fontFamily: 'Crimson Text',
     fontSize: '36px',
     lineHeight: '40px',
     letterSpacing: '0',
   },
-  // AI response text - Crimson Pro Medium 24px
+  // AI response text - Crimson Text Medium 24px
   aiResponse: {
-    fontFamily: 'Crimson Pro',
+    fontFamily: 'Crimson Text',
     fontSize: '24px',
     fontWeight: 500,
     lineHeight: '28px',
   },
-  // Chat name - Inter Medium 16px/14px
+  // Chat name - DM Sans Medium 16px/14px
   chatName: {
-    fontFamily: 'Inter',
+    fontFamily: 'DM Sans',
     fontSize: '16px',
     fontWeight: 500,
     lineHeight: '14px',
