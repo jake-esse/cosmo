@@ -24,7 +24,10 @@ Ampel is building the first app store for consumer AI applications where users e
 
 ## Tech Stack
 
-- **Frontend**: Next.js 14 (App Router)
+- **Architecture**: Monorepo with npm workspaces
+- **Frontend (Web)**: Next.js 15 (App Router)
+- **Frontend (Mobile)**: React Native (coming soon)
+- **Shared Code**: TypeScript utilities, types, and constants
 - **Database**: Supabase (PostgreSQL)
 - **AI**: Anthropic Claude API
 - **UI**: Tailwind CSS + shadcn/ui
@@ -55,10 +58,10 @@ npm install
 
 3. Set up environment variables:
 ```bash
-cp .env.example .env.local
+cp web/.env.example .env.local
 ```
 
-4. Configure your environment variables:
+4. Configure your environment variables in `.env.local`:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
@@ -66,7 +69,7 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_key
 ANTHROPIC_API_KEY=your_claude_api_key
 ```
 
-5. Run the development server:
+5. Run the web development server:
 ```bash
 npm run dev
 ```
@@ -76,17 +79,19 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 ## Project Structure
 
 ```
-/app                    # Next.js 14 App Router pages
-  /(auth)              # Authentication pages
-  /(dashboard)         # Protected app pages
-/components            # React components
-  /ui                  # shadcn/ui components
-  /layout             # Layout components
-/lib                   # Core libraries
-  /supabase           # Database client
-  /constants          # Brand and app constants
-/docs                  # Documentation
-/types                 # TypeScript definitions
+/web                   # Next.js web application
+  /app                 # Next.js 15 App Router pages
+    /(auth)           # Authentication pages
+    /(dashboard)      # Protected app pages
+  /components         # React components
+  /lib                # Web-specific libraries
+/shared               # Shared code between web & mobile
+  /types              # TypeScript type definitions
+  /constants          # Brand and design constants
+  /utils              # Pure utility functions
+/mobile               # React Native app (coming soon)
+/docs                 # Documentation
+/supabase             # Database configuration
 ```
 
 ## Key Features
@@ -117,10 +122,15 @@ Open [http://localhost:3000](http://localhost:3000) to see the application.
 ### Commands
 
 ```bash
-npm run dev       # Start development server
-npm run build     # Build for production
-npm run start     # Start production server
-npm run lint      # Run linter
+# Web app
+npm run dev        # Start web development server (shortcut)
+npm run dev:web    # Start web development server
+npm run build      # Build web app for production
+npm run start      # Start web production server
+
+# Workspace operations
+npm run typecheck  # Type check all workspaces
+npm run lint       # Lint all workspaces
 ```
 
 ### Contributing
@@ -145,10 +155,11 @@ npm run lint      # Run linter
 - ✅ Equity point system
 - ✅ Referral system
 - ✅ AI chat interface
+- ✅ Monorepo architecture (web/mobile/shared)
 - 🚧 App marketplace
 - 🚧 Developer SDK
+- 📋 Mobile apps (React Native)
 - 📋 Blockchain integration
-- 📋 Mobile apps
 
 ## Support
 

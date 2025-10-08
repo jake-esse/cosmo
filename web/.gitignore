@@ -10,26 +10,15 @@
 !.yarn/releases
 !.yarn/versions
 
-# workspace node_modules
-/web/node_modules
-/mobile/node_modules
-/shared/node_modules
-
 # testing
 /coverage
-/web/coverage
-/mobile/coverage
 
 # next.js
 /.next/
 /out/
-/web/.next/
-/web/out/
 
 # production
 /build
-/web/build
-/mobile/build
 
 # misc
 .DS_Store
@@ -50,4 +39,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-/web/next-env.d.ts
