@@ -92,45 +92,86 @@ export async function POST(req: NextRequest) {
     const redirectUri = `${appUrl}/kyc/callback`
 
     if (deviceType === 'desktop') {
-      // Desktop flow: Create session, return token for QR code
-      const { data: session, error: sessionError } = await adminSupabase
-        .from('kyc_sessions')
-        .insert({
-          user_id: user.id,
-          session_token: sessionToken,
-          device_type: 'desktop',
-          initiated_from: 'desktop_qr', // Track that this is a QR code flow
-          status: 'pending',
-          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
-        })
-        .select()
-        .single()
+      // Desktop flow: Create inquiry immediately with session_token as reference-id
+      try {
+        const { inquiry, url } = await personaApi.createInquiryWithLink(
+          templateId,
+          sessionToken, // Use session_token as reference-id for callback lookup
+          redirectUri
+        )
 
-      if (sessionError || !session) {
-        console.error('[KYC Initiate] Error creating session:', {
+        // Create session with inquiry ID
+        const { data: session, error: sessionError } = await adminSupabase
+          .from('kyc_sessions')
+          .insert({
+            user_id: user.id,
+            session_token: sessionToken,
+            inquiry_id: inquiry.id,
+            device_type: 'desktop',
+            initiated_from: 'desktop_qr', // Track that this is a QR code flow
+            status: 'pending',
+            expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes
+          })
+          .select()
+          .single()
+
+        if (sessionError || !session) {
+          console.error('[KYC Initiate] Error creating session:', {
+            userId: user.id,
+            deviceType: 'desktop',
+            inquiryId: inquiry.id,
+            error: sessionError?.message,
+            timestamp: new Date().toISOString(),
+          })
+          return NextResponse.json(
+            { error: 'Failed to create verification session' },
+            { status: 500 }
+          )
+        }
+
+        console.log('[KYC Initiate] Desktop session created successfully:', {
+          userId: user.id,
+          sessionId: session.id,
+          inquiryId: inquiry.id,
+          sessionToken: sessionToken.substring(0, 8) + '...',
+          initiatedFrom: 'desktop_qr',
+          deviceType: 'desktop',
+          status: 'pending',
+          expiresAt: session.expires_at,
+          timestamp: new Date().toISOString(),
+        })
+
+        // Invalidate any old incomplete sessions for this user
+        await invalidateOldSessions(user.id, session.id)
+
+        // Create verification record
+        await adminSupabase
+          .from('kyc_verifications')
+          .insert({
+            user_id: user.id,
+            persona_inquiry_id: inquiry.id,
+            status: 'pending',
+          })
+
+        // Return Persona URL directly for QR code (no intermediate pages)
+        return NextResponse.json({
+          success: true,
+          deviceType: 'desktop',
+          sessionToken,
+          qrUrl: url, // Direct Persona URL
+        } as InitiateKYCResponse)
+      } catch (personaError) {
+        console.error('[KYC Initiate] Error creating Persona inquiry:', {
           userId: user.id,
           deviceType: 'desktop',
-          error: sessionError?.message,
+          error: personaError instanceof Error ? personaError.message : 'Unknown error',
           timestamp: new Date().toISOString(),
         })
         return NextResponse.json(
-          { error: 'Failed to create verification session' },
+          { error: 'Failed to create verification inquiry' },
           { status: 500 }
         )
       }
-
-      // Invalidate any old incomplete sessions for this user
-      await invalidateOldSessions(user.id, session.id)
-
-      // Generate QR code URL (mobile device will scan this)
-      const qrUrl = `${appUrl}/api/kyc/mobile-start/${sessionToken}`
-
-      return NextResponse.json({
-        success: true,
-        deviceType: 'desktop',
-        sessionToken,
-        qrUrl,
-      } as InitiateKYCResponse)
     } else {
       // Mobile flow: Create inquiry immediately and redirect
       try {
@@ -168,6 +209,17 @@ export async function POST(req: NextRequest) {
             { status: 500 }
           )
         }
+
+        console.log('[KYC Initiate] Mobile session created successfully:', {
+          userId: user.id,
+          sessionId: session.id,
+          inquiryId: inquiry.id,
+          initiatedFrom: 'mobile_direct',
+          deviceType: 'mobile',
+          status: 'in_progress',
+          expiresAt: session.expires_at,
+          timestamp: new Date().toISOString(),
+        })
 
         // Invalidate any old incomplete sessions for this user
         await invalidateOldSessions(user.id, session.id)
