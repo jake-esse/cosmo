@@ -12,7 +12,7 @@ import type { RootStackParamList } from './types';
  * Example URLs:
  * - ampel://auth/login
  * - ampel://auth/signup?ref=ABC123
- * - ampel://chat (default - opens Conversations)
+ * - ampel://chat (default - opens Conversations list)
  * - ampel://chat/conversation-id-123
  * - ampel://apps
  * - ampel://apps/app-id-456
@@ -46,9 +46,9 @@ export const linking: LinkingOptions<RootStackParamList> = {
       },
       Main: {
         screens: {
-          Chat: {
+          Conversations: {
             screens: {
-              Conversations: 'chat',
+              ConversationsList: 'chat',
               Chat: 'chat/:conversationId',
             },
           },

@@ -19,14 +19,14 @@ const MainDrawer = createDrawerNavigator<MainDrawerParamList>();
 
 /**
  * Main app drawer for authenticated users
- * 4 drawer items: Chat (default), Apps, Wallet, Profile
+ * 4 drawer items: Conversations (default), Apps, Wallet, Profile
  * Settings and Referrals are nested under Profile, not in drawer
  */
 function MainNavigator() {
   return (
     <MainDrawer.Navigator
       drawerContent={(props) => <DrawerContent {...props} />}
-      initialRouteName="Chat"
+      initialRouteName="Conversations"
       screenOptions={{
         headerShown: false,
         drawerActiveTintColor: '#6366F1',
@@ -43,7 +43,7 @@ function MainNavigator() {
       }}
     >
       <MainDrawer.Screen
-        name="Chat"
+        name="Conversations"
         component={ChatStack}
         options={{
           drawerLabel: 'Conversations',

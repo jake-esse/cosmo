@@ -2,33 +2,26 @@ import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '@ampel/shared/types/supabase';
 import { config } from '@ampel/shared/config';
-import { secureStorage, SECURE_STORAGE_KEYS } from './storage/secure';
+import { supabaseStorageAdapter } from './storage/supabase-adapter';
 
 /**
- * Secure Storage Adapter for Supabase
- * Implements Supabase's storage interface using expo-secure-store
- * This ensures auth tokens are stored securely
+ * Supabase Client with Split Storage Strategy
+ *
+ * Uses a custom storage adapter that splits session data:
+ * - Refresh tokens → SecureStore (sensitive, small)
+ * - Session data → AsyncStorage (large, less sensitive)
+ *
+ * This prevents exceeding SecureStore's 2048 byte limit while
+ * keeping the most sensitive tokens (refresh_token) secure.
+ *
+ * Configuration is loaded from shared config (root .env.local)
  */
-const secureStorageAdapter = {
-  getItem: async (key: string): Promise<string | null> => {
-    return await secureStorage.getItem(SECURE_STORAGE_KEYS.AUTH_SESSION);
-  },
-  setItem: async (key: string, value: string): Promise<void> => {
-    await secureStorage.setItem(SECURE_STORAGE_KEYS.AUTH_SESSION, value);
-  },
-  removeItem: async (key: string): Promise<void> => {
-    await secureStorage.removeItem(SECURE_STORAGE_KEYS.AUTH_SESSION);
-  },
-};
-
-// Create Supabase client with secure storage for session persistence
-// Configuration is loaded from shared config (root .env.local)
 export const supabase = createClient<Database>(
   config.supabase.url,
   config.supabase.anonKey,
   {
     auth: {
-      storage: secureStorageAdapter,
+      storage: supabaseStorageAdapter,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,

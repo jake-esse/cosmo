@@ -11,13 +11,15 @@ interface ConversationItemProps {
   lastMessage?: string;
   lastMessageAt?: Date;
   unreadCount?: number;
+  archived?: boolean;
   onPress: () => void;
   onDelete?: () => void;
+  onArchive?: () => void;
 }
 
 /**
  * Conversation list item component
- * Displays conversation info with swipe-to-delete gesture
+ * Displays conversation info with swipe-to-archive and swipe-to-delete gestures
  * Shows avatar, title, preview, timestamp, and unread badge
  */
 export function ConversationItem({
@@ -26,23 +28,43 @@ export function ConversationItem({
   lastMessage,
   lastMessageAt,
   unreadCount = 0,
+  archived = false,
   onPress,
   onDelete,
+  onArchive,
 }: ConversationItemProps) {
   const renderRightActions = () => {
-    if (!onDelete) return null;
+    if (!onDelete && !onArchive) return null;
 
     return (
-      <TouchableOpacity
-        style={styles.deleteButton}
-        onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          onDelete();
-        }}
-      >
-        <Feather name="trash-2" size={20} color="#FFFFFF" />
-        <Text style={styles.deleteButtonText}>Delete</Text>
-      </TouchableOpacity>
+      <View style={styles.actionsContainer}>
+        {onArchive && (
+          <TouchableOpacity
+            style={styles.archiveButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              onArchive();
+            }}
+          >
+            <Feather name={archived ? 'folder' : 'archive'} size={20} color="#FFFFFF" />
+            <Text style={styles.archiveButtonText}>
+              {archived ? 'Unarchive' : 'Archive'}
+            </Text>
+          </TouchableOpacity>
+        )}
+        {onDelete && (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              onDelete();
+            }}
+          >
+            <Feather name="trash-2" size={20} color="#FFFFFF" />
+            <Text style={styles.deleteButtonText}>Delete</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     );
   };
 
@@ -180,6 +202,22 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#F3F4F6',
     marginLeft: 76, // Align with content (avatar width + margin)
+  },
+  actionsContainer: {
+    flexDirection: 'row',
+  },
+  archiveButton: {
+    backgroundColor: '#F59E0B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
+  },
+  archiveButtonText: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   deleteButton: {
     backgroundColor: '#DC2626',

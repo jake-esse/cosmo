@@ -68,6 +68,73 @@ export interface Database {
         }
         Update: never
       }
+      conversations: {
+        Row: {
+          id: string
+          user_id: string
+          title: string | null
+          model: string
+          total_tokens_used: number
+          last_message_at: string | null
+          archived: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title?: string | null
+          model?: string
+          total_tokens_used?: number
+          last_message_at?: string | null
+          archived?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string | null
+          model?: string
+          total_tokens_used?: number
+          last_message_at?: string | null
+          archived?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      messages: {
+        Row: {
+          id: string
+          conversation_id: string
+          role: string
+          content: string
+          tokens_used: number | null
+          model: string | null
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          conversation_id: string
+          role: string
+          content: string
+          tokens_used?: number | null
+          model?: string | null
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          conversation_id?: string
+          role?: string
+          content?: string
+          tokens_used?: number | null
+          model?: string | null
+          metadata?: Json | null
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

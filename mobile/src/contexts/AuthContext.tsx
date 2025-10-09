@@ -4,6 +4,7 @@ import { supabase } from '@/services/supabase';
 import { authService } from '@/services/api/auth';
 import { biometricsService } from '@/services/platform/biometrics';
 import type { SignUpCredentials, SignInCredentials, AuthError } from '@/types/auth';
+import { asyncStorage, ASYNC_STORAGE_KEYS } from '@/services/storage/async';
 
 /**
  * Auth Context Type Definition
@@ -36,6 +37,41 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  */
 interface AuthProviderProps {
   children: React.ReactNode;
+}
+
+/**
+ * Track daily active bonus
+ * Awards 10 points once per day when user launches app
+ * Uses AsyncStorage to track last active date
+ */
+async function trackDailyActive(userId: string): Promise<void> {
+  try {
+    const lastActive = await asyncStorage.getItem(ASYNC_STORAGE_KEYS.LAST_ACTIVE_DATE);
+    const today = new Date().toDateString();
+
+    if (lastActive !== today) {
+      const requestId = `daily-${userId}-${today}`;
+
+      const { error } = await supabase.rpc('award_equity_points', {
+        p_user_id: userId,
+        p_action_type: 'daily_active',
+        p_amount: 10,
+        p_request_id: requestId,
+        p_description: 'Daily active bonus',
+        p_app_id: null,
+      } as any);
+
+      if (error) {
+        console.error('[Auth] Error awarding daily active bonus:', error);
+      } else {
+        console.log('[Auth] Daily active bonus awarded');
+        await asyncStorage.setItem(ASYNC_STORAGE_KEYS.LAST_ACTIVE_DATE, today);
+      }
+    }
+  } catch (error) {
+    console.error('[Auth] Failed to track daily active:', error);
+    // Don't block app launch on equity error
+  }
 }
 
 /**
@@ -81,6 +117,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
           await refreshBiometricsState();
+
+          // Award daily active bonus (Sprint 8)
+          if (currentSession?.user) {
+            await trackDailyActive(currentSession.user.id);
+          }
         }
       } catch (error) {
         console.error('[AuthContext] Error initializing auth:', error);

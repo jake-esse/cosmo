@@ -17,21 +17,21 @@ export type AuthStackParamList = {
 
 /**
  * Main Drawer Navigation (4 items)
- * Chat is the default screen
+ * Conversations is the default screen
  */
 export type MainDrawerParamList = {
-  Chat: undefined;
+  Conversations: undefined;
   Apps: undefined;
   Wallet: undefined;
   Profile: undefined;
 };
 
 /**
- * Chat Stack (under Chat drawer item)
+ * Chat Stack (under Conversations drawer item)
  * Conversations list and individual chat screen
  */
 export type ChatStackParamList = {
-  Conversations: undefined;
+  ConversationsList: undefined;
   Chat: { conversationId: string };
 };
 
