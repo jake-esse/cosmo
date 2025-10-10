@@ -7,14 +7,14 @@
 
 /**
  * API Base URL
- * - In production (mobile): Points to https://ampel.app
+ * - In production (mobile): Points to Vercel deployment
  * - In development: Points to localhost:3000
  * - Can be overridden with NEXT_PUBLIC_API_BASE_URL environment variable
  */
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   (process.env.NODE_ENV === 'production'
-    ? 'https://ampel.app'
+    ? 'https://cosmo-git-feature-capacitor-mobile-test-ampel.vercel.app'
     : 'http://localhost:3000');
 
 /**
