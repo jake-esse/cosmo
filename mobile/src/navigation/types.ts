@@ -49,6 +49,7 @@ export type AppsStackParamList = {
  */
 export type WalletStackParamList = {
   WalletOverview: undefined;
+  TransactionHistory: undefined;
 };
 
 /**

@@ -4,14 +4,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { Feather } from '@expo/vector-icons';
 import { WalletScreen } from '@/screens/WalletScreen';
+import { TransactionHistoryScreen } from '@/screens/TransactionHistoryScreen';
 import type { WalletStackParamList } from '../types';
 
 const Stack = createNativeStackNavigator<WalletStackParamList>();
 
 /**
  * Wallet Stack Navigator
- * Contains wallet overview screen
- * Will be implemented in Sprint 8-9
+ * Contains wallet overview and transaction history screens
  */
 export function WalletStack() {
   const navigation = useNavigation();
@@ -32,6 +32,14 @@ export function WalletStack() {
               <Feather name="menu" size={24} color="#1F2937" />
             </TouchableOpacity>
           ),
+        }}
+      />
+      <Stack.Screen
+        name="TransactionHistory"
+        component={TransactionHistoryScreen}
+        options={{
+          headerShown: true,
+          title: 'Transaction History',
         }}
       />
     </Stack.Navigator>
