@@ -152,7 +152,7 @@ export default function ChatHistoryPage() {
             {conversations.map((conv) => (
               <Link
                 key={conv.id}
-                href={`/chat/${conv.id}`}
+                href={`/chat/conversation?id=${conv.id}`}
                 className="block bg-white border border-slate-200 rounded-[20px] p-5 hover:shadow-[0px_4px_6px_0px_rgba(0,0,0,0.09)] hover:border-slate-300 transition-all group"
               >
                 <div className="flex items-start justify-between gap-4">

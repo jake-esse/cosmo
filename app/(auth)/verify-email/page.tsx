@@ -1,16 +1,16 @@
+'use client'
+
 import { Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 
-function VerifyEmailContent({ 
-  searchParams 
-}: { 
-  searchParams: { [key: string]: string | string[] | undefined } 
-}) {
-  const error = searchParams.error
-  const success = searchParams.success === 'true'
+function VerifyEmailContent() {
+  const searchParams = useSearchParams()
+  const error = searchParams.get('error')
+  const success = searchParams.get('success') === 'true'
 
   if (error) {
     return (
@@ -81,11 +81,7 @@ function VerifyEmailContent({
   )
 }
 
-export default function VerifyEmailPage({ 
-  searchParams 
-}: { 
-  searchParams: { [key: string]: string | string[] | undefined } 
-}) {
+export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
       <Card className="w-full max-w-md">
@@ -94,7 +90,7 @@ export default function VerifyEmailPage({
         </CardContent>
       </Card>
     }>
-      <VerifyEmailContent searchParams={searchParams} />
+      <VerifyEmailContent />
     </Suspense>
   )
 }

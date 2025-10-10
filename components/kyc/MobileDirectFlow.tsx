@@ -10,6 +10,7 @@ import { Smartphone, AlertCircle, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import type { InitiateKYCResponse } from '@/types/persona'
+import { getApiUrl } from '@/lib/config'
 
 export function MobileDirectFlow() {
   const [loading, setLoading] = useState<boolean>(true)
@@ -22,7 +23,7 @@ export function MobileDirectFlow() {
         setLoading(true)
         setError(null)
 
-        const response = await fetch('/api/kyc/initiate', {
+        const response = await fetch(getApiUrl('/api/kyc/initiate'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

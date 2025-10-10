@@ -1,50 +1,126 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
-import { getUserBalance } from '@/app/(auth)/actions'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { PageLayout } from '@/components/layout/PageLayout'
 import CopyButton from '@/components/CopyButton'
 
-export default async function DashboardPage() {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/login')
-  }
+export default function DashboardPage() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [profile, setProfile] = useState<any>(null)
+  const [balance, setBalance] = useState<any>(null)
 
-  // FAILSAFE: Check for and complete any pending referrals when dashboard loads
-  try {
-    const { data: referralResult, error: referralError } = await supabase.rpc(
-      'complete_pending_referral_for_user',
-      { p_user_id: user.id }
-    )
-    
-    if (referralResult?.success) {
-      console.log('[DASHBOARD_REFERRAL_CHECK] Completed pending referral:', referralResult)
-    } else if (referralResult?.reason && !referralResult.reason.includes('No pending referral')) {
-      console.log('[DASHBOARD_REFERRAL_CHECK] Referral check result:', referralResult)
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        setLoading(true)
+        setError(null)
+
+        const supabase = createClient()
+
+        // Check auth
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
+
+        if (authError || !user) {
+          router.push('/login')
+          return
+        }
+
+        // FAILSAFE: Check for and complete any pending referrals when dashboard loads
+        try {
+          const { data: referralResult, error: referralError } = await supabase.rpc(
+            'complete_pending_referral_for_user',
+            { p_user_id: user.id }
+          )
+
+          if (referralResult?.success) {
+            console.log('[DASHBOARD_REFERRAL_CHECK] Completed pending referral:', referralResult)
+          } else if (referralResult?.reason && !referralResult.reason.includes('No pending referral')) {
+            console.log('[DASHBOARD_REFERRAL_CHECK] Referral check result:', referralResult)
+          }
+
+          if (referralError) {
+            console.warn('[DASHBOARD_REFERRAL_CHECK] RPC error:', referralError?.message || referralError)
+          }
+        } catch (err) {
+          // Don't fail dashboard load if referral check fails
+          console.error('[DASHBOARD_REFERRAL_CHECK] Exception during referral check:', err)
+        }
+
+        // Fetch profile
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+
+        if (profileError) {
+          console.error('[DASHBOARD] Profile fetch error:', profileError)
+          throw new Error('Failed to load profile')
+        }
+
+        // Fetch balance using same RPC as Server Action
+        const { data: balanceData, error: balanceError } = await supabase.rpc('get_user_balance', {
+          p_user_id: user.id
+        })
+
+        if (balanceError) {
+          console.error('[DASHBOARD] Balance fetch error:', balanceError)
+          throw new Error('Failed to load balance')
+        }
+
+        setProfile(profileData)
+        setBalance(balanceData)
+        setLoading(false)
+      } catch (err) {
+        console.error('[DASHBOARD] Load error:', err)
+        setError(err instanceof Error ? err.message : 'Failed to load dashboard')
+        setLoading(false)
+      }
     }
-    
-    if (referralError) {
-      console.warn('[DASHBOARD_REFERRAL_CHECK] RPC error:', referralError?.message || referralError)
-    }
-  } catch (err) {
-    // Don't fail dashboard load if referral check fails
-    console.error('[DASHBOARD_REFERRAL_CHECK] Exception during referral check:', err)
-  }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
+    loadDashboardData()
+  }, [router])
 
-  const balance = await getUserBalance(user.id)
-  
   const formatNumber = (num: number | string | null) => {
     if (num === null || num === undefined) return '0'
     return parseFloat(num.toString()).toLocaleString()
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <PageLayout pageName="Dashboard">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#485C11] border-r-transparent mb-4"></div>
+            <p className="text-slate-600 font-sans">Loading dashboard...</p>
+          </div>
+        </div>
+      </PageLayout>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <PageLayout pageName="Dashboard">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <p className="text-red-600 font-sans mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-[#2A341D] text-white rounded-lg hover:bg-[#1F2816]"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </PageLayout>
+    )
   }
 
   return (

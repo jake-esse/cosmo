@@ -2,20 +2,31 @@
 
 import { ChatInterface } from '@/components/chat/ChatInterface'
 import { PageLayout } from '@/components/layout/PageLayout'
-import { useEffect, useState, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useEffect, useState, useCallback, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useNavigation } from '@/components/layout/NavigationContext'
+import { getApiUrl } from '@/lib/config'
 
-export default function ChatDetailPage() {
-  const params = useParams()
-  const chatId = params.id as string
+function ChatConversationContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const chatId = searchParams.get('id')
   const [userInitials, setUserInitials] = useState('JE')
   const [conversationTitle, setConversationTitle] = useState('Chat')
   const { setActiveChat } = useNavigation()
 
+  // Redirect to /chat if no ID provided
+  useEffect(() => {
+    if (!chatId) {
+      router.push('/chat')
+    }
+  }, [chatId, router])
+
   const fetchConversationTitle = useCallback(async () => {
+    if (!chatId) return
+
     try {
-      const response = await fetch(`/api/conversations/${chatId}`)
+      const response = await fetch(getApiUrl(`/api/conversations/${chatId}`))
       if (response.ok) {
         const { conversation } = await response.json()
         setConversationTitle(conversation.title)
@@ -26,6 +37,8 @@ export default function ChatDetailPage() {
   }, [chatId])
 
   useEffect(() => {
+    if (!chatId) return
+
     // Get user initials
     const storedName = localStorage.getItem('userName') || 'Jake Esse'
     const initials = storedName
@@ -53,6 +66,20 @@ export default function ChatDetailPage() {
     setActiveChat(conversationId)
   }
 
+  // Don't render if no chatId (will redirect)
+  if (!chatId) {
+    return (
+      <PageLayout pageName="Chat">
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#485C11] border-r-transparent mb-4"></div>
+            <p className="text-slate-600 font-sans">Redirecting...</p>
+          </div>
+        </div>
+      </PageLayout>
+    )
+  }
+
   return (
     <PageLayout pageName={conversationTitle}>
       <ChatInterface
@@ -63,5 +90,22 @@ export default function ChatDetailPage() {
         // Don't pass onSendMessage to use real AI streaming
       />
     </PageLayout>
+  )
+}
+
+export default function ChatConversationPage() {
+  return (
+    <Suspense fallback={
+      <PageLayout pageName="Chat">
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#485C11] border-r-transparent mb-4"></div>
+            <p className="text-slate-600 font-sans">Loading conversation...</p>
+          </div>
+        </div>
+      </PageLayout>
+    }>
+      <ChatConversationContent />
+    </Suspense>
   )
 }

@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { getApiUrl } from "@/lib/config"
 
 interface DebugInfo {
   providers?: unknown
@@ -20,19 +21,19 @@ export default function DebugModelsPage() {
   async function loadDebugInfo() {
     try {
       // Fetch provider debug info
-      const providersRes = await fetch('/api/debug-providers', {
+      const providersRes = await fetch(getApiUrl('/api/debug-providers'), {
         cache: 'no-store'
       })
       const providers = await providersRes.json()
 
       // Fetch provider initialization test
-      const initRes = await fetch('/api/test-provider-init', {
+      const initRes = await fetch(getApiUrl('/api/test-provider-init'), {
         cache: 'no-store'
       })
       const providerInit = await initRes.json()
 
       // Fetch available models
-      const modelsRes = await fetch('/api/chat/models', {
+      const modelsRes = await fetch(getApiUrl('/api/chat/models'), {
         cache: 'no-store'
       })
       const models = await modelsRes.json()

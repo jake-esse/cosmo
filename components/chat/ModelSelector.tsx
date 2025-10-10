@@ -11,6 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, Crown, Zap } from 'lucide-react';
 import { ModelConfig } from '@/lib/ai/types';
+import { getApiUrl } from '@/lib/config';
 
 interface ModelSelectorProps {
   value: string;
@@ -30,7 +31,7 @@ export function ModelSelector({ value, onChange, disabled, conversationModel, ha
 
   const fetchModels = async () => {
     try {
-      const response = await fetch('/api/chat/models');
+      const response = await fetch(getApiUrl('/api/chat/models'));
       const data = await response.json();
       
       if (data.models) {

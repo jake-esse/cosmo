@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { toast } from 'sonner'
+import { getApiUrl } from '@/lib/config'
 
 const exportTypes = [
   { value: 'user_profiles', label: 'User Profiles', description: 'User IDs, names, and registration dates' },
@@ -83,7 +84,7 @@ export default function ExportsPage() {
 
         // Call the API to generate and download the CSV
         try {
-          const response = await fetch('/api/compliance/export', {
+          const response = await fetch(getApiUrl('/api/compliance/export'), {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'

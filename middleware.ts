@@ -5,14 +5,35 @@ import { createServerClient } from '@supabase/ssr'
  * Comprehensive middleware with step-by-step onboarding flow enforcement
  *
  * Flow Priority:
- * 1. Not authenticated → /login
- * 2. OAuth user → Skip email verification
- * 3. Email user without verified email → /check-email
- * 4. No KYC completion → /kyc/start
- * 5. No education completion → /onboarding
- * 6. All complete → Allow access to protected routes
+ * 1. API routes → Add CORS headers for mobile app access
+ * 2. Not authenticated → /login
+ * 3. OAuth user → Skip email verification
+ * 4. Email user without verified email → /check-email
+ * 5. No KYC completion → /kyc/start
+ * 6. No education completion → /onboarding
+ * 7. All complete → Allow access to protected routes
  */
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+
+  // Handle CORS for API routes (for Capacitor mobile apps)
+  if (pathname.startsWith('/api/')) {
+    // Handle OPTIONS preflight request
+    if (request.method === 'OPTIONS') {
+      return new NextResponse(null, {
+        status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Max-Age': '86400',
+        },
+      })
+    }
+
+    // For actual API requests, we'll add CORS headers after processing
+    // Continue to Supabase setup below
+  }
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -42,8 +63,6 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const pathname = request.nextUrl.pathname
-
   // Route categorization
   const isApiRoute = pathname.startsWith('/api')
   const isPublicRoute = ['/', '/about', '/pricing'].includes(pathname)
@@ -62,6 +81,12 @@ export async function middleware(request: NextRequest) {
 
   // Skip checks for API routes and public routes
   if (isApiRoute || isPublicRoute) {
+    // Add CORS headers for API routes (for Capacitor mobile apps)
+    if (isApiRoute) {
+      supabaseResponse.headers.set('Access-Control-Allow-Origin', '*')
+      supabaseResponse.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+      supabaseResponse.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+    }
     return supabaseResponse
   }
 

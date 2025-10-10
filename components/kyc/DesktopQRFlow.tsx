@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button'
 import { QRCodeDisplay } from './QRCodeDisplay'
 import { useKYCStatus } from '@/lib/hooks/useKYCStatus'
 import type { InitiateKYCResponse } from '@/types/persona'
+import { getApiUrl } from '@/lib/config'
 
 const SESSION_DURATION_MS = 30 * 60 * 1000 // 30 minutes
 
@@ -54,7 +55,7 @@ export function DesktopQRFlow() {
         setLoading(true)
         setInitiateError(null)
 
-        const response = await fetch('/api/kyc/initiate', {
+        const response = await fetch(getApiUrl('/api/kyc/initiate'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

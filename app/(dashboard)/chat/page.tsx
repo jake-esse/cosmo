@@ -107,9 +107,9 @@ function ChatPageContent() {
     setConversationTitle(title)
     setActiveChat(conversationId)
     setCurrentChatId(conversationId)
-    
+
     // Update URL without navigation to prevent component remount
-    window.history.replaceState({}, '', `/chat/${conversationId}`)
+    window.history.replaceState({}, '', `/chat/conversation?id=${conversationId}`)
   }
 
   const handleConversationUpdated = () => {

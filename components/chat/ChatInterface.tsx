@@ -9,6 +9,7 @@ import { ContextLimitDialog } from './ContextLimitDialog'
 import { VineIcon } from '@/components/icons'
 import { useRouter } from 'next/navigation'
 import { wouldExceedContextLimit } from '@/lib/ai/tokenizer'
+import { getApiUrl } from '@/lib/config'
 
 export interface SearchSource {
   sourceType: 'url' | 'x' | 'news' | 'rss';
@@ -190,7 +191,7 @@ export function ChatInterface({
   const loadConversation = async (id: string) => {
     try {
       setIsLoadingConversation(true)
-      const response = await fetch(`/api/conversations/${id}`)
+      const response = await fetch(getApiUrl(`/api/conversations/${id}`))
       if (!response.ok) {
         console.error('Failed to load conversation')
         return
@@ -232,12 +233,12 @@ export function ChatInterface({
 
   const createConversation = async (firstMessage: string, model: string) => {
     try {
-      const response = await fetch('/api/conversations', {
+      const response = await fetch(getApiUrl('/api/conversations'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           firstMessage,
-          model 
+          model
         }),
       })
 
@@ -269,7 +270,7 @@ export function ChatInterface({
 
   const saveMessage = async (message: Message, convId: string) => {
     try {
-      const response = await fetch('/api/messages', {
+      const response = await fetch(getApiUrl('/api/messages'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -459,7 +460,7 @@ export function ChatInterface({
       } else {
         console.log('Using real AI streaming API')
         // Use real AI streaming
-        const response = await fetch('/api/chat/stream', {
+        const response = await fetch(getApiUrl('/api/chat/stream'), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
