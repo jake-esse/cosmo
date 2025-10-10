@@ -1,26 +1,12 @@
-import { streamText } from 'ai';
-import { createXai } from '@ai-sdk/xai';
-
 /**
  * AI Integration Service
- * Handles all AI interactions using Vercel AI SDK with xAI's Grok models
+ * Configuration and utilities for AI models
+ *
+ * Note: AI streaming is now handled by the /api/chat endpoint
+ * and useChat hook from @ai-sdk/react
  */
 
 // Types
-export interface TokenUsage {
-  promptTokens: number;
-  completionTokens: number;
-  totalTokens: number;
-}
-
-export interface StreamingOptions {
-  modelId: string;
-  messages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }>;
-  onChunk?: (chunk: string) => void;
-  onComplete?: (usage: TokenUsage) => void;
-  onError?: (error: Error) => void;
-}
-
 export interface Model {
   id: string;
   name: string;
@@ -46,92 +32,6 @@ export const AVAILABLE_MODELS: Model[] = [
     maxTokens: 4096,
   },
 ];
-
-/**
- * Initialize xAI provider
- * @throws Error if API key is not configured
- */
-export function initializeXaiProvider() {
-  const apiKey = process.env.EXPO_PUBLIC_XAI_API_KEY;
-
-  if (!apiKey || apiKey.startsWith('your_')) {
-    throw new Error(
-      'xAI API key not configured. Please set EXPO_PUBLIC_XAI_API_KEY in your .env.local file.'
-    );
-  }
-
-  return createXai({ apiKey });
-}
-
-/**
- * Stream chat completion from xAI Grok model
- * This is an async generator that yields text chunks as they arrive
- *
- * @example
- * for await (const chunk of streamChatCompletion(options)) {
- *   console.log(chunk); // Display chunk in UI
- * }
- */
-export async function* streamChatCompletion(
-  options: StreamingOptions
-): AsyncGenerator<string, TokenUsage, unknown> {
-  const { modelId, messages, onChunk, onComplete, onError } = options;
-
-  try {
-    // Initialize provider
-    const xai = initializeXaiProvider();
-
-    // Get model instance
-    const model = xai(modelId);
-
-    // Add system message for better formatting
-    const messagesWithSystem = [
-      {
-        role: 'system' as const,
-        content:
-          'You are a helpful assistant. Please format your responses using markdown for better readability. Use headers, bold text, code blocks, and lists where appropriate.',
-      },
-      ...messages,
-    ];
-
-    console.log('[AI] Starting stream with model:', modelId);
-    console.log('[AI] Message count:', messagesWithSystem.length);
-
-    // Stream the response
-    const result = streamText({
-      model,
-      messages: messagesWithSystem,
-      maxTokens: 4096,
-      temperature: 0.7,
-    } as any);
-
-    // Stream text chunks
-    for await (const chunk of (await result).textStream) {
-      onChunk?.(chunk);
-      yield chunk;
-    }
-
-    // Wait for completion to get usage stats
-    const finalResult = await result;
-    const completion = await finalResult.usage;
-
-    const usage: TokenUsage = {
-      promptTokens: completion?.inputTokens || 0,
-      completionTokens: completion?.outputTokens || 0,
-      totalTokens: (completion?.inputTokens || 0) + (completion?.outputTokens || 0),
-    };
-
-    console.log('[AI] Stream completed. Usage:', usage);
-    onComplete?.(usage);
-
-    return usage;
-  } catch (error) {
-    console.error('[AI] Streaming error:', error);
-    const errorObj = error instanceof Error ? error : new Error(String(error));
-    onError?.(errorObj);
-    throw errorObj;
-  }
-}
 
 /**
  * Get user-friendly error message from AI SDK error

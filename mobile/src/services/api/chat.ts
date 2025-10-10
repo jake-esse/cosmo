@@ -1,9 +1,12 @@
 import { supabase } from '@/services/supabase';
-import { streamChatCompletion, getDefaultModelId, type TokenUsage } from './ai';
+import { getDefaultModelId } from './ai';
 
 /**
  * Chat Operations Service
- * Handles all chat-related database operations and AI interactions
+ * Handles all chat-related database operations
+ *
+ * Note: AI streaming is now handled by the useChat hook in ChatScreen
+ * using the /api/chat endpoint
  */
 
 // Types
@@ -28,156 +31,6 @@ export interface Conversation {
   archived: boolean;
   created_at: string;
   updated_at: string;
-}
-
-export interface SendMessageOptions {
-  conversationId: string;
-  content: string;
-  modelId?: string;
-  onChunk?: (chunk: string) => void;
-  onComplete?: (message: Message) => void;
-  onError?: (error: Error) => void;
-}
-
-/**
- * Send a message and stream the AI response
- * This is the main function for chat interactions
- */
-export async function sendMessage(
-  options: SendMessageOptions
-): Promise<{ userMessage: Message; assistantMessage: Message }> {
-  const { conversationId, content, modelId, onChunk, onComplete, onError } = options;
-  const model = modelId || getDefaultModelId();
-
-  try {
-    // 1. Save user message to database
-    const { data: userMessage, error: userError } = await supabase
-      .from('messages')
-      .insert({
-        conversation_id: conversationId,
-        role: 'user',
-        content: content.trim(),
-        model,
-      } as any)
-      .select()
-      .single() as { data: Message | null; error: any };
-
-    if (userError || !userMessage) {
-      throw new Error('Failed to save user message: ' + userError?.message);
-    }
-
-    console.log('[Chat] User message saved:', userMessage!.id);
-
-    // 2. Fetch conversation history for context
-    const messages = await getMessages(conversationId);
-    const conversationHistory = messages.map((msg) => ({
-      role: msg.role as 'user' | 'assistant' | 'system',
-      content: msg.content,
-    }));
-
-    console.log('[Chat] Conversation history loaded:', conversationHistory.length, 'messages');
-
-    // 3. Stream AI response
-    let fullResponse = '';
-    let usage: TokenUsage | null = null;
-
-    try {
-      for await (const chunk of streamChatCompletion({
-        modelId: model,
-        messages: conversationHistory,
-        onChunk: (chunk) => {
-          fullResponse += chunk;
-          onChunk?.(chunk);
-        },
-        onComplete: (tokenUsage) => {
-          usage = tokenUsage;
-        },
-        onError,
-      })) {
-        // Chunks are already handled in onChunk callback
-      }
-    } catch (streamError) {
-      console.error('[Chat] Streaming error:', streamError);
-      throw streamError;
-    }
-
-    console.log('[Chat] Stream completed. Response length:', fullResponse.length);
-    console.log('[Chat] Token usage:', usage);
-
-    // 4. Save assistant message to database
-    const { data: assistantMessage, error: assistantError } = await supabase
-      .from('messages')
-      .insert({
-        conversation_id: conversationId,
-        role: 'assistant',
-        content: fullResponse,
-        tokens_used: (usage as any)?.totalTokens || 0,
-        model,
-        metadata: {
-          prompt_tokens: (usage as any)?.promptTokens || 0,
-          completion_tokens: (usage as any)?.completionTokens || 0,
-        },
-      } as any)
-      .select()
-      .single() as { data: Message | null; error: any };
-
-    if (assistantError || !assistantMessage) {
-      throw new Error('Failed to save assistant message: ' + assistantError?.message);
-    }
-
-    console.log('[Chat] Assistant message saved:', assistantMessage!.id);
-
-    // 5. Update conversation metadata
-    const totalTokens = (usage as any)?.totalTokens || 0;
-
-    // Get current conversation to update tokens
-    const { data: currentConv } = await supabase
-      .from('conversations')
-      .select('total_tokens_used')
-      .eq('id', conversationId)
-      .single() as { data: { total_tokens_used: number } | null; error: any };
-
-    await supabase
-      .from('conversations')
-      // @ts-ignore - Supabase type inference issue, update is valid
-      .update({
-        last_message_at: new Date().toISOString(),
-        total_tokens_used: (currentConv?.total_tokens_used || 0) + totalTokens,
-      })
-      .eq('id', conversationId);
-
-    console.log('[Chat] Conversation metadata updated');
-
-    // Call completion callback
-    onComplete?.(assistantMessage);
-
-    // Award 1 point for chat message (Sprint 8)
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const requestId = `chat-${conversationId}-${Date.now()}-${Math.random()}`;
-        await supabase.rpc('award_equity_points', {
-          p_user_id: user.id,
-          p_action_type: 'app_usage',
-          p_amount: 1,
-          p_request_id: requestId,
-          p_description: 'Chat message sent',
-          p_app_id: null,
-        } as any);
-        console.log('[Chat] Equity point awarded for message');
-      }
-    } catch (equityError) {
-      console.error('[Chat] Failed to award equity:', equityError);
-      // Don't block chat on equity error
-    }
-
-    return { userMessage, assistantMessage };
-  } catch (error) {
-    console.error('[Chat] sendMessage error:', error);
-    const errorObj = error instanceof Error ? error : new Error(String(error));
-    onError?.(errorObj);
-    throw errorObj;
-  }
 }
 
 /**

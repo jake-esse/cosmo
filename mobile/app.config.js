@@ -73,6 +73,6 @@ module.exports = {
         projectId: 'ampel-mobile',
       },
     },
-    plugins: ['expo-secure-store'],
+    plugins: ['expo-router', 'expo-secure-store'],
   },
 };
